@@ -1,38 +1,42 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import psychology_router
+from app.routes import psychology_router, neuroscience_router
 
-# إنشاء تطبيق FastAPI
 app = FastAPI(
-    title="Psychology Assessment API",
-    description="API لتقييم الحالة النفسية",
-    version="1.0.0",
+    title="Mental Health Assessment API",
+    description="API for psychology and neuroscience assessments",
+    version="1.1.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# إضافة CORS middleware للسماح بالطلبات من تطبيق الموبايل
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # في الإنتاج، استبدل * بالنطاقات المحددة
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# تسجيل الـ routes
 app.include_router(psychology_router)
+app.include_router(neuroscience_router)
 
 
 @app.get("/")
 async def root():
-    """الصفحة الرئيسية للـ API"""
+    """API root endpoint"""
     return {
-        "message": "مرحبًا بك في API تقييم الحالة النفسية",
-        "version": "1.0.0",
+        "message": "Mental Health Assessment API",
+        "version": "1.1.0",
         "endpoints": {
-            "get_questions": "GET /psychology",
-            "submit_answers": "POST /psychology/submit",
+            "psychology": {
+                "get_questions": "GET /psychology",
+                "submit_answers": "POST /psychology/submit"
+            },
+            "neuroscience": {
+                "get_questions": "GET /neuroscience/questions",
+                "submit_answers": "POST /neuroscience/submit"
+            },
             "documentation": "/docs"
         }
     }
@@ -40,10 +44,12 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """فحص صحة الخادم"""
+    """Health check endpoint"""
     return {"status": "healthy"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -8,10 +8,10 @@ router = APIRouter(prefix="/psychology", tags=["psychology"])
 @router.get("", response_model=QuestionnaireResponse)
 async def get_psychology_questionnaire():
     """
-    جلب استبيان تقييم الحالة النفسية
+    Get psychology assessment questionnaire
     
     Returns:
-        QuestionnaireResponse: الاستبيان الكامل مع جميع الأسئلة
+        QuestionnaireResponse: Complete questionnaire with all questions
     """
     return PsychologyService.get_questionnaire()
 
@@ -19,16 +19,16 @@ async def get_psychology_questionnaire():
 @router.post("/submit", response_model=AssessmentResult)
 async def submit_psychology_answers(submission: AnswersSubmission):
     """
-    استقبال إجابات المستخدم وحساب النتيجة
+    Submit user answers and calculate result
     
     Args:
-        submission: الإجابات المرسلة من المستخدم (7 إجابات، كل منها بين 1 و 3)
+        submission: User answers (7 answers, each between 1 and 3)
     
     Returns:
-        AssessmentResult: النتيجة النهائية مع المستوى والرسالة المناسبة
+        AssessmentResult: Final result with level and message
     
     Raises:
-        HTTPException: في حالة وجود خطأ في التحقق من صحة البيانات
+        HTTPException: If validation fails
     """
     try:
         result = PsychologyService.calculate_assessment(submission.answers)

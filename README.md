@@ -1,12 +1,17 @@
-# Psychology Assessment API 🧠
+# Mental Health Assessment API
 
-API لتقييم الحالة النفسية باستخدام FastAPI
+A FastAPI-based backend service for psychology and neuroscience assessments in mobile applications.
 
-## 📋 الوصف
+## Features
 
-هذا المشروع عبارة عن خدمة Backend لتقييم الحالة النفسية ضمن تطبيق موبايل. يحتوي على 7 أسئلة ثابتة تقيس الحالة المزاجية والنفسية للمستخدم، ويتم حساب النتيجة بطريقة بسيطة دون الحاجة لقاعدة بيانات أو AI.
+- Psychology assessment with 7 questions
+- Neuroscience assessment with 9 questions (Fight/Flight/Freeze/Fawn patterns)
+- No database required - all logic is server-side
+- No AI dependencies
+- Pydantic validation
+- CORS enabled for mobile apps
 
-## 🏗️ هيكل المشروع
+## Project Structure
 
 ```
 abrag/
@@ -14,74 +19,78 @@ abrag/
 │   ├── __init__.py
 │   ├── models/
 │   │   ├── __init__.py
-│   │   └── psychology.py          # نماذج Pydantic
+│   │   ├── psychology.py          # Pydantic models
+│   │   └── neuroscience.py        # Neuroscience models
 │   ├── routes/
 │   │   ├── __init__.py
-│   │   └── psychology.py          # endpoints
+│   │   ├── psychology.py          # Psychology endpoints
+│   │   └── neuroscience.py        # Neuroscience endpoints
 │   └── services/
 │       ├── __init__.py
-│       └── psychology_service.py  # منطق الأعمال
-├── main.py                        # تطبيق FastAPI الرئيسي
+│       ├── psychology_service.py  # Psychology business logic
+│       └── neuroscience_service.py # Neuroscience business logic
+├── main.py                        # FastAPI main application
+├── gradio_app.py                  # Gradio web interface
 ├── requirements.txt
 └── README.md
 ```
 
-## 🚀 التثبيت والتشغيل
-
-### 1. تثبيت المتطلبات
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. تشغيل الخادم
+## Running
+
+### FastAPI Server
 
 ```bash
 uvicorn main:app --reload
 ```
 
-أو:
+Or:
 
 ```bash
 python main.py
 ```
 
-سيعمل الخادم على: `http://localhost:8000`
+Server runs at: http://localhost:8000
 
-### 3. الوصول للتوثيق التفاعلي
+### Gradio Interface
 
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-
-## 📡 Endpoints
-
-### 1. جلب الأسئلة
-
-**GET** `/psychology`
-
-**Response:**
-```json
-{
-  "title": "تقييم الحالة النفسية",
-  "description": "اختر الإجابة الأقرب لك خلال الأسبوع الأخير",
-  "questions": [
-    {
-      "id": 1,
-      "text": "كيف هو نومك؟",
-      "options": [
-        "مريح ومنتظم",
-        "متقطع أحيانًا",
-        "سيئ أو غير منتظم"
-      ]
-    },
-    ...
-  ]
-}
+```bash
+python gradio_app.py
 ```
 
-### 2. إرسال الإجابات
+### API Documentation
 
-**POST** `/psychology/submit`
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+---
+
+## Endpoints
+
+### Root
+
+#### GET /
+Returns API information and available endpoints.
+
+#### GET /health
+Health check endpoint.
+
+---
+
+### Psychology Assessment
+
+#### GET /psychology
+
+Returns the psychology questionnaire with 7 questions.
+
+#### POST /psychology/submit
+
+Submit answers and receive assessment result.
 
 **Request Body:**
 ```json
@@ -90,138 +99,115 @@ python main.py
 }
 ```
 
-**شروط الإجابات:**
-- يجب أن تحتوي على 7 عناصر بالضبط
-- كل قيمة يجب أن تكون بين 1 و 3
-  - 1 = الخيار الأول (الأفضل)
-  - 2 = الخيار الثاني (متوسط)
-  - 3 = الخيار الثالث (الأسوأ)
+**Answer Requirements:**
+- Must contain exactly 7 items
+- Each value must be between 1 and 3
 
-**Response:**
-```json
-{
-  "score": 12,
-  "level": "ضغط نفسي خفيف",
-  "message": "تمر بفترة من الضغط النفسي الخفيف. حاول أخذ فترات راحة، ومارس أنشطة تساعدك على الاسترخاء مثل المشي أو التأمل. إذا استمرت الحالة، يُنصح باستشارة متخصص."
-}
-```
+**Score Ranges:**
 
-## 📊 نظام التقييم
-
-### نطاقات النتائج:
-
-| النطاق | المستوى | الوصف |
-|--------|---------|-------|
-| 7-10 | حالة مستقرة | الحالة النفسية مستقرة |
-| 11-14 | ضغط نفسي خفيف | ضغط نفسي خفيف يحتاج اهتمام |
-| 15-18 | اضطراب مزاجي متوسط | يُنصح بالتحدث مع متخصص |
-| 19-21 | اضطراب مزاجي مرتفع | يحتاج تقييم متخصص بشكل عاجل |
-
-## 🧪 أمثلة الاستخدام
-
-### مثال 1: جلب الأسئلة
-
-```bash
-curl -X GET "http://localhost:8000/psychology" \
-  -H "accept: application/json"
-```
-
-### مثال 2: إرسال إجابات (حالة مستقرة)
-
-```bash
-curl -X POST "http://localhost:8000/psychology/submit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "answers": [1, 1, 1, 1, 1, 1, 1]
-  }'
-```
-
-**النتيجة:** score=7, level="حالة مستقرة"
-
-### مثال 3: إرسال إجابات (ضغط نفسي خفيف)
-
-```bash
-curl -X POST "http://localhost:8000/psychology/submit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "answers": [2, 2, 2, 1, 2, 2, 1]
-  }'
-```
-
-**النتيجة:** score=12, level="ضغط نفسي خفيف"
-
-### مثال 4: إرسال إجابات (اضطراب مزاجي مرتفع)
-
-```bash
-curl -X POST "http://localhost:8000/psychology/submit" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "answers": [3, 3, 3, 3, 3, 3, 3]
-  }'
-```
-
-**النتيجة:** score=21, level="اضطراب مزاجي مرتفع – يُنصح بتقييم متخصص"
-
-## ✅ Validation
-
-يتم التحقق من صحة البيانات باستخدام Pydantic:
-
-- **عدد الإجابات:** يجب أن يكون 7 بالضبط
-- **نطاق الإجابات:** كل إجابة يجب أن تكون 1، 2، أو 3
-- **رسائل خطأ واضحة:** في حال إدخال بيانات غير صحيحة
-
-### أمثلة للأخطاء:
-
-**عدد إجابات خاطئ:**
-```json
-{
-  "answers": [1, 2, 3]
-}
-```
-سيعود: `"List should have at most 7 items after validation"`
-
-**قيمة خارج النطاق:**
-```json
-{
-  "answers": [1, 2, 5, 1, 2, 1, 2]
-}
-```
-سيعود: `"الإجابة رقم 3 يجب أن تكون بين 1 و 3، القيمة المدخلة: 5"`
-
-## 🔮 التوسعات المستقبلية
-
-الكود مصمم ليكون قابلاً للتوسع:
-
-- ✨ إضافة قاعدة بيانات لحفظ النتائج
-- 🤖 دمج AI لتحليل أعمق
-- 📊 إضافة تقارير ورسوم بيانية
-- 👤 نظام مستخدمين وتاريخ التقييمات
-- 🔔 إشعارات ومتابعة دورية
-- 🌐 دعم لغات متعددة
-
-## 🛡️ الأمان
-
-- استخدم CORS المناسب للإنتاج (حدد النطاقات بدلاً من "*")
-- أضف authentication/authorization عند الحاجة
-- استخدم HTTPS في بيئة الإنتاج
-- قم بـ rate limiting لمنع الإساءة
-
-## 📝 ملاحظات
-
-- الأسئلة والرسائل ثابتة في الكود (يمكن نقلها لملف config)
-- لا يتم حفظ أي بيانات حالياً
-- الحساب بسيط: مجرد جمع القيم
-- مناسب للاستخدام في MVP أو prototype
-
-## 📄 الترخيص
-
-هذا المشروع مفتوح المصدر
-
-## 🤝 المساهمة
-
-نرحب بالمساهمات! يمكنك فتح issue أو pull request
+| Range | Level |
+|-------|-------|
+| 7-10 | Stable |
+| 11-14 | Mild stress |
+| 15-18 | Moderate disorder |
+| 19-21 | High disorder |
 
 ---
 
-**تم التطوير بواسطة:** Ahmed  
-**التاريخ:** فبراير 2026
+### Neuroscience Assessment
+
+#### GET /neuroscience/questions
+
+Returns the neuroscience questionnaire with 9 questions.
+
+#### POST /neuroscience/submit
+
+Submit answers and receive neural pattern assessment.
+
+**Request Body:**
+```json
+{
+  "answers": ["A", "B", "A", "C", "D", "A", "B", "C", "A"]
+}
+```
+
+**Answer Requirements:**
+- Must contain exactly 9 items
+- Each value must be "A", "B", "C", or "D"
+
+**Pattern Mapping:**
+
+| Option | Pattern |
+|--------|---------|
+| A | Fight |
+| B | Flight |
+| C | Freeze |
+| D | Fawn |
+
+**Special Cases:**
+
+1. **Tie:** dominant becomes "Mixed Fight/Flight"
+2. **Strong Secondary:** If difference <= 1, strong_secondary = true
+
+---
+
+## Usage Examples
+
+### Get Psychology Questions
+
+```bash
+curl -X GET "http://localhost:8000/psychology"
+```
+
+### Submit Psychology Answers
+
+```bash
+curl -X POST "http://localhost:8000/psychology/submit" \
+  -H "Content-Type: application/json" \
+  -d '{"answers": [1, 1, 1, 1, 1, 1, 1]}'
+```
+
+### Get Neuroscience Questions
+
+```bash
+curl -X GET "http://localhost:8000/neuroscience/questions"
+```
+
+### Submit Neuroscience Answers
+
+```bash
+curl -X POST "http://localhost:8000/neuroscience/submit" \
+  -H "Content-Type: application/json" \
+  -d '{"answers": ["A", "B", "A", "C", "D", "A", "B", "C", "A"]}'
+```
+
+---
+
+## Security Notes
+
+- Use appropriate CORS for production
+- Add authentication when needed
+- Use HTTPS in production
+- Implement rate limiting
+
+---
+
+## Railway Deployment
+
+1. Push your code to GitHub
+2. Go to [Railway](https://railway.app)
+3. Click "New Project" > "Deploy from GitHub repo"
+4. Select your repository
+5. Railway will auto-detect and deploy
+
+**Files included for Railway:**
+- `Procfile` - Process configuration
+- `railway.toml` - Railway configuration
+- `runtime.txt` - Python version
+
+---
+
+## License
+
+MIT
+

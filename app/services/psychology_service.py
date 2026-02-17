@@ -3,9 +3,8 @@ from ..models.psychology import Question, QuestionnaireResponse, AssessmentResul
 
 
 class PsychologyService:
-    """خدمة منطق الأعمال لتقييم الحالة النفسية"""
+    """Business logic service for psychology assessment"""
     
-    # الأسئلة الثابتة
     QUESTIONS = [
         {
             "id": 1,
@@ -72,7 +71,6 @@ class PsychologyService:
         }
     ]
     
-    # الرسائل لكل مستوى
     LEVEL_MESSAGES = {
         "حالة مستقرة": (
             "حالتك النفسية مستقرة بشكل عام. استمر في الحفاظ على نمط حياة صحي، "
@@ -98,7 +96,7 @@ class PsychologyService:
     
     @classmethod
     def get_questionnaire(cls) -> QuestionnaireResponse:
-        """إرجاع الاستبيان الكامل مع جميع الأسئلة"""
+        """Return complete questionnaire with all questions"""
         questions = [Question(**q) for q in cls.QUESTIONS]
         
         return QuestionnaireResponse(
@@ -109,21 +107,18 @@ class PsychologyService:
     
     @classmethod
     def calculate_assessment(cls, answers: List[int]) -> AssessmentResult:
-        """حساب النتيجة وتحديد المستوى والرسالة المناسبة"""
-        # حساب مجموع الدرجات
+        """Calculate result and determine level with appropriate message"""
         score = sum(answers)
         
-        # تحديد المستوى بناءً على الدرجة
         if 7 <= score <= 10:
             level = "حالة مستقرة"
         elif 11 <= score <= 14:
             level = "ضغط نفسي خفيف"
         elif 15 <= score <= 18:
             level = "اضطراب مزاجي متوسط"
-        else:  # 19-21
+        else:
             level = "اضطراب مزاجي مرتفع – يُنصح بتقييم متخصص"
         
-        # الحصول على الرسالة المناسبة
         message = cls.LEVEL_MESSAGES[level]
         
         return AssessmentResult(

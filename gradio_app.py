@@ -1,110 +1,210 @@
 import gradio as gr
 from app.services.psychology_service import PsychologyService
+from app.services.neuroscience_service import NeuroscienceService
 
-# جلب الأسئلة
-questionnaire = PsychologyService.get_questionnaire()
-questions = questionnaire.questions
+psych_questionnaire = PsychologyService.get_questionnaire()
+psych_questions = psych_questionnaire.questions
+
+neuro_questionnaire = NeuroscienceService.get_questionnaire()
+neuro_questions = neuro_questionnaire.questions
 
 
-def process_answers(*answers):
-    """معالجة الإجابات وحساب النتيجة"""
+def process_psychology_answers(*answers):
+    """Process psychology answers and calculate result"""
     try:
-        # تحويل الإجابات من النصوص إلى أرقام (1, 2, 3)
         numeric_answers = []
         for i, answer in enumerate(answers):
             if answer:
-                # البحث عن الخيار في القائمة
-                options = questions[i].options
+                options = psych_questions[i].options
                 numeric_answer = options.index(answer) + 1
                 numeric_answers.append(numeric_answer)
             else:
-                return "⚠️ يرجى الإجابة على جميع الأسئلة"
+                return "Please answer all questions"
         
-        # التحقق من عدد الإجابات
         if len(numeric_answers) != 7:
-            return "⚠️ يرجى الإجابة على جميع الأسئلة السبعة"
+            return "Please answer all 7 questions"
         
-        # حساب النتيجة
         result = PsychologyService.calculate_assessment(numeric_answers)
         
-        # تنسيق النتيجة
         output = f"""
-## 📊 نتيجة التقييم
+## Result
 
-**الدرجة:** {result.score} / 21
+**Score:** {result.score} / 21
 
-**المستوى:** {result.level}
+**Level:** {result.level}
 
 ---
 
-### 💬 الرسالة:
+### Message:
 
 {result.message}
 
 ---
 
-**تفاصيل إجاباتك:**
+**Your answers:**
 """
-        for i, (q, ans) in enumerate(zip(questions, numeric_answers), 1):
-            output += f"\n{i}. {q.text}\n   ✓ {q.options[ans-1]}\n"
+        for i, (q, ans) in enumerate(zip(psych_questions, numeric_answers), 1):
+            output += f"\n{i}. {q.text}\n   {q.options[ans-1]}\n"
         
         return output
         
     except Exception as e:
-        return f"❌ حدث خطأ: {str(e)}"
+        return f"Error: {str(e)}"
 
 
-# بناء الواجهة
-with gr.Blocks(title="تقييم الحالة النفسية", theme=gr.themes.Soft()) as demo:
+def process_neuroscience_answers(*answers):
+    """Process neuroscience answers and calculate result"""
+    try:
+        letter_answers = []
+        for i, answer in enumerate(answers):
+            if answer:
+                letter = answer.split(":")[0].strip()
+                letter_answers.append(letter)
+            else:
+                return "Please answer all questions"
+        
+        if len(letter_answers) != 9:
+            return "Please answer all 9 questions"
+        
+        result = NeuroscienceService.calculate_assessment(letter_answers)
+        
+        strong_secondary_text = "Yes" if result.strong_secondary else "No"
+        
+        output = f"""
+## Neuroscience Assessment Result
+
+### Score Distribution:
+
+| Pattern | Score |
+|---------|-------|
+| Fight (A) | {result.scores.A} |
+| Flight (B) | {result.scores.B} |
+| Freeze (C) | {result.scores.C} |
+| Fawn (D) | {result.scores.D} |
+
+---
+
+### Result:
+
+**Dominant Pattern:** {result.dominant}
+
+**Secondary Pattern:** {result.secondary}
+
+**Strong Secondary:** {strong_secondary_text}
+
+---
+
+### Description:
+
+{result.description}
+
+---
+
+**Your answers:**
+"""
+        for i, (q, ans) in enumerate(zip(neuro_questions, letter_answers), 1):
+            ans_text = q.options_text.get(ans, "")
+            output += f"\n{i}. {q.text}\n   {ans}: {ans_text}\n"
+        
+        return output
+        
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+with gr.Blocks(title="Mental Health Assessment", theme=gr.themes.Soft()) as demo:
     
     gr.Markdown(
-        f"""
-        # 🧠 {questionnaire.title}
+        """
+        # Mental Health Assessment Platform
         
-        ### {questionnaire.description}
+        Select the appropriate assessment from the tabs below
         
         ---
         """
     )
     
-    # إنشاء قوائم منسدلة للأسئلة
-    answer_components = []
-    
-    for q in questions:
-        with gr.Group():
-            gr.Markdown(f"### السؤال {q.id}: {q.text}")
-            radio = gr.Radio(
-                choices=q.options,
-                label="اختر إجابتك",
-                interactive=True
+    with gr.Tabs():
+        with gr.TabItem("Psychology Assessment"):
+            gr.Markdown(
+                f"""
+                ## {psych_questionnaire.title}
+                
+                ### {psych_questionnaire.description}
+                
+                ---
+                """
             )
-            answer_components.append(radio)
-    
-    # زر الإرسال
-    submit_btn = gr.Button("📝 إرسال الإجابات وعرض النتيجة", variant="primary", size="lg")
-    
-    # منطقة عرض النتيجة
-    gr.Markdown("---")
-    output = gr.Markdown(label="النتيجة")
-    
-    # ربط الزر بالوظيفة
-    submit_btn.click(
-        fn=process_answers,
-        inputs=answer_components,
-        outputs=output
-    )
+            
+            psych_answer_components = []
+            
+            for q in psych_questions:
+                with gr.Group():
+                    gr.Markdown(f"### Question {q.id}: {q.text}")
+                    radio = gr.Radio(
+                        choices=q.options,
+                        label="Select your answer",
+                        interactive=True
+                    )
+                    psych_answer_components.append(radio)
+            
+            psych_submit_btn = gr.Button("Submit Answers", variant="primary", size="lg")
+            
+            gr.Markdown("---")
+            psych_output = gr.Markdown(label="Result")
+            
+            psych_submit_btn.click(
+                fn=process_psychology_answers,
+                inputs=psych_answer_components,
+                outputs=psych_output
+            )
+        
+        with gr.TabItem("Neuroscience Assessment"):
+            gr.Markdown(
+                f"""
+                ## {neuro_questionnaire.title}
+                
+                ### {neuro_questionnaire.description}
+                
+                ---
+                """
+            )
+            
+            neuro_answer_components = []
+            
+            for q in neuro_questions:
+                with gr.Group():
+                    gr.Markdown(f"### Question {q.id}: {q.text}")
+                    choices = [f"{opt}: {q.options_text[opt]}" for opt in q.options]
+                    radio = gr.Radio(
+                        choices=choices,
+                        label="Select your answer",
+                        interactive=True
+                    )
+                    neuro_answer_components.append(radio)
+            
+            neuro_submit_btn = gr.Button("Submit Answers", variant="primary", size="lg")
+            
+            gr.Markdown("---")
+            neuro_output = gr.Markdown(label="Result")
+            
+            neuro_submit_btn.click(
+                fn=process_neuroscience_answers,
+                inputs=neuro_answer_components,
+                outputs=neuro_output
+            )
     
     gr.Markdown(
         """
         ---
         
-        ### 📌 ملاحظات:
+        ### Notes:
         
-        - جميع الأسئلة إلزامية
-        - اختر الإجابة الأقرب لحالتك خلال الأسبوع الأخير
-        - النتائج توجيهية وليست تشخيصاً طبياً
+        - All questions are required
+        - Select the answer closest to your current state
+        - Results are for guidance only, not medical diagnosis
         
-        **تم التطوير بواسطة FastAPI + Gradio** ✨
+        **Built with FastAPI + Gradio**
         """
     )
 
