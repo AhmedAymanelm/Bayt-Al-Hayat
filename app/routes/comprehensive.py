@@ -1,5 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
+
+from app.database import get_db
+from app.auth.models import User
+from app.auth.dependencies import get_current_user
+from app.models.history import AssessmentHistory
 from ..models.comprehensive import ComprehensiveAnswers, ComprehensiveResult, ComprehensiveResultsInput
 from ..services.comprehensive_service import ComprehensiveService
 from ..services.ai_video_service import AIVideoService
@@ -8,7 +14,11 @@ router = APIRouter(prefix="/comprehensive", tags=["comprehensive"])
 
 
 @router.post("/submit", response_model=Dict[str, Any])
-async def submit_comprehensive_answers(submission: ComprehensiveAnswers):
+async def submit_comprehensive_answers(
+    submission: ComprehensiveAnswers,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Submit all assessment answers and get comprehensive analysis
     
@@ -30,6 +40,17 @@ async def submit_comprehensive_answers(submission: ComprehensiveAnswers):
             birth_time=submission.birth_time,
             birth_place=submission.birth_place
         )
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="comprehensive",
+            input_data=submission.model_dump(),
+            result_data=result
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -39,7 +60,9 @@ async def submit_comprehensive_answers(submission: ComprehensiveAnswers):
 async def generate_comprehensive_video(
     submission: ComprehensiveAnswers,
     model: str = "gpt4o",
-    voice: str = "nova"
+    voice: str = "nova",
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Generate AI video combining psychology, neuroscience, and astrology analysis
@@ -72,6 +95,17 @@ async def generate_comprehensive_video(
             voice=voice
         )
         
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="comprehensive",
+            input_data=submission.model_dump(),
+            result_data={"analysis": video_data, "video": video_result},
+            video_url=video_result.get("final_video")
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return {
             "analysis": video_data,
             "video": video_result
@@ -85,7 +119,9 @@ async def generate_comprehensive_video(
 async def analyze_from_results(
     submission: ComprehensiveResultsInput,
     model: str = "gpt-4o",
-    temperature: float = 0.8
+    temperature: float = 0.8,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Generate comprehensive AI analysis report from pre-computed results.
@@ -115,6 +151,16 @@ async def analyze_from_results(
             model=model,
             temperature=temperature
         )
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="comprehensive_report",
+            input_data=submission.model_dump(),
+            result_data=report
+        )
+        db.add(history_entry)
+        await db.commit()
         
         return report
         

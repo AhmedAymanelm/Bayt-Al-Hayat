@@ -1,15 +1,36 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routes import psychology_router, neuroscience_router, letter_router, astrology_router, comprehensive_router
+
+from app.routes import psychology_router, neuroscience_router, letter_router, astrology_router, comprehensive_router, history_router
+from app.auth import auth_router
+from app.database import init_db
 import os
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create database tables on startup
+    await init_db()
+    yield
+
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
+from fastapi.openapi.models import OAuthFlowPassword
 
 app = FastAPI(
     title="Mental Health Assessment API",
     description="API for psychology, neuroscience, letter science, astrology assessments, and comprehensive AI video generation",
-    version="1.4.0",
+    version="1.5.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
+    swagger_ui_init_oauth={
+        "usePkceWithAuthorizationCodeGrant": True,
+        "clientId": "your_client_id",
+    },
 )
 
 app.add_middleware(
@@ -20,11 +41,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(psychology_router)
 app.include_router(neuroscience_router)
 app.include_router(letter_router)
 app.include_router(astrology_router)
 app.include_router(comprehensive_router)
+app.include_router(history_router)
 
 # Serve generated media files (audio/video)
 os.makedirs("videos", exist_ok=True)

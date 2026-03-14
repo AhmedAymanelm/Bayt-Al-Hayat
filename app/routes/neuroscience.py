@@ -1,4 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.auth.models import User
+from app.auth.dependencies import get_current_user
+from app.models.history import AssessmentHistory
+
 from ..models.neuroscience import (
     NeuroscienceQuestionnaireResponse,
     NeuroscienceAnswersSubmission,
@@ -21,7 +28,11 @@ async def get_neuroscience_questionnaire():
 
 
 @router.post("/submit", response_model=NeuroscienceAssessmentResult)
-async def submit_neuroscience_answers(submission: NeuroscienceAnswersSubmission):
+async def submit_neuroscience_answers(
+    submission: NeuroscienceAnswersSubmission,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Submit user answers and calculate neural pattern
     
@@ -36,6 +47,17 @@ async def submit_neuroscience_answers(submission: NeuroscienceAnswersSubmission)
     """
     try:
         result = NeuroscienceService.calculate_assessment(submission.answers)
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="neuroscience",
+            input_data={"answers": submission.answers},
+            result_data=result.model_dump()
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

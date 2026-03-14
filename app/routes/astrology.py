@@ -1,5 +1,11 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.auth.models import User
+from app.auth.dependencies import get_current_user
+from app.models.history import AssessmentHistory
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from ..models.astrology import AstrologyRequest, AstrologyResponse
@@ -28,19 +34,38 @@ class VideoGenerationRequest(BaseModel):
 
 
 @router.post("/analyze", response_model=AstrologyResponse)
-async def analyze_daily_horoscope(request: AstrologyRequest):
+async def analyze_daily_horoscope(
+    request: AstrologyRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     تحليل البرج اليومي وإرجاع التحليل النفسي الشامل
     """
     try:
         result = await AstrologyService.analyze(request)
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="astrology",
+            input_data=request.model_dump(),
+            result_data=result.model_dump()
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/generate-video")
-async def generate_astrology_video(request: VideoGenerationRequest):
+async def generate_astrology_video(
+    request: VideoGenerationRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Generate AI video explanation of astrology analysis
     
@@ -70,6 +95,17 @@ async def generate_astrology_video(request: VideoGenerationRequest):
             avatar=request.avatar
         )
         
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="astrology",
+            input_data=request.model_dump(),
+            result_data={"analysis": result_dict, "video": video_result},
+            video_url=video_result.get("final_video")
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return {
             "analysis": result_dict,
             "video": video_result
@@ -83,7 +119,11 @@ async def generate_astrology_video(request: VideoGenerationRequest):
 
 
 @router.post("/generate-video-stream")
-async def generate_astrology_video_stream(request: VideoGenerationRequest):
+async def generate_astrology_video_stream(
+    request: VideoGenerationRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Stream video generation progress in real-time
     """
@@ -115,6 +155,17 @@ async def generate_astrology_video_stream(request: VideoGenerationRequest):
                 include_video=request.include_video,
                 avatar=request.avatar
             )
+            
+            # Save to history
+            history_entry = AssessmentHistory(
+                user_id=current_user.id,
+                assessment_type="astrology",
+                input_data=request.model_dump(),
+                result_data={"analysis": result_dict, "video": video_result},
+                video_url=video_result.get("final_video")
+            )
+            db.add(history_entry)
+            await db.commit()
             
             yield f"data: {json.dumps({'status': 'complete', 'progress': 100, 'result': video_result})}\n\n"
             

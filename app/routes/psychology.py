@@ -1,5 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
+
+from app.database import get_db
+from app.auth.models import User
+from app.auth.dependencies import get_current_user
+from app.models.history import AssessmentHistory
+
 from ..models.psychology import QuestionnaireResponse, AnswersSubmission, AssessmentResult
 from ..services.psychology_service import PsychologyService
 from ..services.ai_video_service import AIVideoService
@@ -19,7 +26,11 @@ async def get_psychology_questionnaire():
 
 
 @router.post("/submit", response_model=AssessmentResult)
-async def submit_psychology_answers(submission: AnswersSubmission):
+async def submit_psychology_answers(
+    submission: AnswersSubmission,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Submit user answers and calculate result
     
@@ -34,6 +45,17 @@ async def submit_psychology_answers(submission: AnswersSubmission):
     """
     try:
         result = PsychologyService.calculate_assessment(submission.answers)
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="psychology",
+            input_data={"answers": submission.answers},
+            result_data=result.model_dump()
+        )
+        db.add(history_entry)
+        await db.commit()
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -44,7 +66,9 @@ async def generate_psychology_video(
     submission: AnswersSubmission,
     name: str = "Friend",
     model: str = "gpt4o",
-    voice: str = "nova"
+    voice: str = "nova",
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Generate AI video explaining psychology assessment results
@@ -77,6 +101,17 @@ async def generate_psychology_video(
             model=model,
             voice=voice
         )
+        
+        # Save to history
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="psychology",
+            input_data={"answers": submission.answers, "name": name},
+            result_data={"assessment": assessment.model_dump(), "video": video_result},
+            video_url=video_result.get("final_video")
+        )
+        db.add(history_entry)
+        await db.commit()
         
         return {
             "assessment": assessment.model_dump(),
