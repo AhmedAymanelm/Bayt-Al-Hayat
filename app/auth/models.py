@@ -21,6 +21,7 @@ class User(Base):
     time_of_birth = Column(Time, nullable=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    profile_picture_url = Column(String, nullable=True)
     verification_code = Column(String(6), nullable=True)
     verification_code_expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

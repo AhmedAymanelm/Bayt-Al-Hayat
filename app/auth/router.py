@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status, BackgroundTasks, UploadFile, File, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
@@ -16,6 +16,7 @@ from app.auth.schemas import (
     RefreshTokenRequest,
     RefreshTokenResponse,
     VerifyAccountRequest,
+    UserResponse,
 )
 from app.auth.service import (
     register_user,
@@ -26,6 +27,9 @@ from app.auth.service import (
     verify_account,
     logout,
 )
+from app.auth.dependencies import get_current_user
+from app.auth.models import User
+from app.auth.cloudinary_service import upload_profile_picture, delete_profile_picture
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -60,7 +64,7 @@ async def login(
 @router.post(
     "/login/swagger",
     summary="OAuth2 Token endpoint for Swagger UI",
-    include_in_schema=False, # Hide this from the main docs since it's just for the Authorize button
+    include_in_schema=False,
 )
 async def login_swagger(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -70,7 +74,6 @@ async def login_swagger(
     login_req = LoginRequest(email=form_data.username, password=form_data.password)
     response = await login_user(login_req, db)
     
-    # Swagger Authorize explicitly needs exactly these fields without nesting
     return {
         "access_token": response["access_token"],
         "token_type": response["token_type"],
@@ -133,3 +136,76 @@ async def verify_account_route(
 )
 async def logout_route():
     return await logout()
+
+
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get current user profile",
+)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """Returns the currently authenticated user's profile"""
+    return current_user
+
+
+@router.post(
+    "/profile-picture",
+    response_model=UserResponse,
+    summary="Upload or update profile picture",
+)
+async def upload_profile_picture_route(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a profile picture (max 5MB, jpg/png/webp)"""
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPG, PNG, and WebP images are allowed"
+        )
+    
+    # Validate file size (5MB max)
+    file_bytes = await file.read()
+    if len(file_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="File size must be less than 5MB"
+        )
+    
+    # Upload to Cloudinary
+    image_url = await upload_profile_picture(file_bytes, str(current_user.id))
+    
+    # Save URL to database
+    current_user.profile_picture_url = image_url
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+    
+    return current_user
+
+
+@router.delete(
+    "/profile-picture",
+    response_model=MessageResponse,
+    summary="Delete profile picture",
+)
+async def delete_profile_picture_route(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove the current user's profile picture"""
+    if not current_user.profile_picture_url:
+        raise HTTPException(status_code=404, detail="No profile picture to delete")
+    
+    # Delete from Cloudinary
+    await delete_profile_picture(str(current_user.id))
+    
+    # Remove URL from database
+    current_user.profile_picture_url = None
+    db.add(current_user)
+    await db.commit()
+    
+    return {"message": "Profile picture deleted successfully"}
