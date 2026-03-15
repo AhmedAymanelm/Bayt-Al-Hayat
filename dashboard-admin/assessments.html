@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assessments - Abrag Admin</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* KPI Cards Row */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
+    .kpi-mini { background: var(--bg-surface); border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid var(--border-color); }
+    .kpi-mini .kpi-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+    .kpi-mini .kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--text-main); line-height: 1; }
+    .kpi-mini .kpi-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+    /* Journey Table */
+    .journey-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .journey-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); font-weight: 600; background: var(--bg-body); }
+    .journey-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: var(--text-main); }
+    .journey-table tr:last-child td { border-bottom: none; }
+    .journey-table tr:hover td { background: rgba(99,102,241,0.04); }
+    /* Stage Checkmarks */
+    .stages-row { display: flex; align-items: center; gap: 6px; }
+    .stage-chip { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; position: relative; }
+    .stage-chip.done { background: #d1fae5; }
+    .stage-chip.done i { color: #059669; }
+    .stage-chip.todo { background: var(--bg-body); border: 1.5px dashed var(--border-color); }
+    .stage-chip.todo i { color: var(--text-muted); opacity: 0.5; }
+    .stage-arrow { color: var(--border-color); font-size: 0.85rem; }
+    /* Progress Bar */
+    .prog-wrap { display: flex; align-items: center; gap: 0.5rem; }
+    .prog-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-body); overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #4f46e5); transition: width 0.6s ease; }
+    .prog-fill.full { background: linear-gradient(90deg, #10b981, #059669); }
+    .prog-txt { font-size: 0.75rem; color: var(--text-muted); min-width: 32px; text-align: right; }
+    /* User cell */
+    .user-cell { display: flex; flex-direction: column; }
+    .user-cell .uname { font-weight: 600; margin-bottom: 2px; }
+    .user-cell .uemail { font-size: 0.76rem; color: var(--text-muted); }
+    /* Video badge */
+    .badge-video-yes { background: #d1fae5; color: #065f46; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
+    .badge-video-no { background: var(--bg-body); color: var(--text-muted); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600; border: 1px solid var(--border-color); }
+    /* Tab Bar */
+    .tab-bar { display: flex; gap: 2px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; margin-bottom: 1.5rem; width: fit-content; }
+    .tab-btn { padding: 0.45rem 1.1rem; border-radius: 6px; font-size: 0.84rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.15s; }
+    .tab-btn.active { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .empty-msg { text-align: center; padding: 3rem; color: var(--text-muted); }
+    /* Data Table (from old design) */
+    .table-card { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 1rem; }
+    .table-controls { padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+    .filters { display: flex; gap: 0.75rem; }
+    .filters select { padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 0.85rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .data-table th { text-align: left; padding: 1rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-color); background: var(--bg-body); font-weight: 600; letter-spacing: 0.05em; }
+    .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+    .data-table tr:hover td { background: var(--bg-body); }
+    .badge { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .type-psychology { background: #e0e7ff; color: #4338ca; }
+    .type-neuroscience { background: #cffafe; color: #0891b2; }
+    .type-letter { background: #fef3c7; color: #b45309; }
+    .type-astrology { background: #f3e8ff; color: #7e22ce; }
+    .type-comprehensive { background: #d1fae5; color: #047857; }
+    .action-btn { background: none; border: none; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 500; transition: all 0.2s; }
+    .view-btn { color: #6366f1; background: #e0e7ff; }
+    .delete-btn { color: #ef4444; background: #fee2e2; }
+    /* Type breakdown inside KPI */
+    .type-breakdown { display: flex; flex-direction: column; gap: 4px; margin-top: 0.4rem; }
+    .type-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.73rem; gap: 6px; }
+    .type-row .type-name { color: var(--text-muted); white-space: nowrap; }
+    .type-row .type-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--bg-body); overflow: hidden; }
+    .type-row .type-fill { height: 100%; border-radius: 3px; }
+    .type-row .type-cnt { color: var(--text-main); font-weight: 600; min-width: 20px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">ABRAG</div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> Dashboard</a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> Users</a>
+        <a href="assessments.html" class="nav-item active"><i class='bx bx-book-open'></i> Assessments</a>
+        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> Videos</a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-server'></i> System Health</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>Assessments</strong> <span>|</span> User Journey Tracker</div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+          <div class="kpi-mini">
+            <div class="kpi-label"><i class='bx bx-group'></i> Users Assessed</div>
+            <div class="kpi-value" id="kpiUsersAssessed">—</div>
+            <div class="kpi-sub">Started at least 1 stage</div>
+          </div>
+          <div class="kpi-mini" style="grid-column: span 2;">
+            <div class="kpi-label"><i class='bx bx-book-open'></i> Assessments by Type</div>
+            <div class="type-breakdown" id="kpiTypeBreakdown">
+              <div style="color:var(--text-muted);font-size:0.8rem;">Loading...</div>
+            </div>
+          </div>
+          <div class="kpi-mini">
+            <div class="kpi-label"><i class='bx bx-trophy'></i> Fully Completed</div>
+            <div class="kpi-value" id="kpiCompleted">—</div>
+            <div class="kpi-sub">All 5 stages done</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="kpi-label"><i class='bx bx-video'></i> With Video</div>
+            <div class="kpi-value" id="kpiVideo">—</div>
+            <div class="kpi-sub">Generated comprehensive video</div>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('journey', this)"><i class='bx bx-map-alt'></i> Journey View</button>
+          <button class="tab-btn" onclick="switchTab('records', this)"><i class='bx bx-list-ul'></i> All Records</button>
+        </div>
+
+        <!-- JOURNEY VIEW TAB -->
+        <div id="tabJourney">
+          <div class="table-card">
+            <table class="journey-table">
+              <thead>
+                <tr>
+                  <th style="width: 220px;">User</th>
+                  <th>Journey Progress</th>
+                  <th style="width: 100px;">Stages</th>
+                  <th style="width: 80px;">Video</th>
+                  <th style="width: 120px;">Last Active</th>
+                </tr>
+              </thead>
+              <tbody id="journeyTableBody">
+                <tr><td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ALL RECORDS TAB -->
+        <div id="tabRecords" style="display:none;">
+          <div class="table-card">
+            <div class="table-controls">
+              <h2 style="font-size: 1rem; font-weight: 600;">All Assessment Records</h2>
+              <div class="filters">
+                <select id="typeFilter" onchange="filterRecords()">
+                  <option value="all">All Types</option>
+                  <option value="psychology">Psychology</option>
+                  <option value="neuroscience">Neuroscience</option>
+                  <option value="letter">Letter</option>
+                  <option value="astrology">Astrology</option>
+                  <option value="comprehensive">Comprehensive</option>
+                </select>
+                <select id="videoFilter" onchange="filterRecords()">
+                  <option value="all">All</option>
+                  <option value="yes">Has Video</option>
+                  <option value="no">No Video</option>
+                </select>
+              </div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Video</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTableBody">
+                <tr><td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Result Modal -->
+  <div id="resultModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-surface);border-radius:12px;padding:2rem;max-width:700px;width:95%;max-height:80vh;overflow-y:auto;position:relative;">
+      <button onclick="closeModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);">×</button>
+      <h3 style="margin-bottom:1rem;font-size:1rem;" id="modalTitle">Assessment Result</h3>
+      <pre id="modalContent" style="font-size:0.78rem;background:var(--bg-body);padding:1rem;border-radius:8px;overflow:auto;max-height:50vh;white-space:pre-wrap;"></pre>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const STAGES = ['psychology', 'neuroscience', 'letter', 'astrology', 'comprehensive'];
+    const STAGE_ICONS = { psychology: 'bx-brain', neuroscience: 'bx-network-chart', letter: 'bx-text', astrology: 'bx-star', comprehensive: 'bx-trophy' };
+    const STAGE_LABELS = { psychology: 'Psychology', neuroscience: 'Neuroscience', letter: 'Letter', astrology: 'Astrology', comprehensive: 'Comprehensive' };
+
+    let allRecords = [];
+    let currentTab = 'journey';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      loadJourney();
+      loadRecords();
+    });
+
+    function switchTab(tab, btn) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tabJourney').style.display = tab === 'journey' ? '' : 'none';
+      document.getElementById('tabRecords').style.display = tab === 'records' ? '' : 'none';
+    }
+
+    async function loadJourney() {
+      try {
+        const res = await apiFetch('/admin/assessments/journey');
+        if (!res) return;
+        const data = await res.json();
+
+        // KPIs
+        document.getElementById('kpiUsersAssessed').textContent = data.length;
+        const fullyDone = data.filter(u => u.completed_count === 5).length;
+        document.getElementById('kpiCompleted').textContent = fullyDone;
+        const withVideo = data.filter(u => u.has_video).length;
+        document.getElementById('kpiVideo').textContent = withVideo;
+
+        const tbody = document.getElementById('journeyTableBody');
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">No assessments found yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.map(user => {
+          const stagesHtml = STAGES.map((stage, i) => {
+            const done = user.stages[stage];
+            const arrow = i < STAGES.length - 1 ? `<i class='bx bx-chevron-right stage-arrow'></i>` : '';
+            return `
+              <div class="stage-chip ${done ? 'done' : 'todo'}" title="${STAGE_LABELS[stage]}">
+                <i class='bx ${STAGE_ICONS[stage]}'></i>
+              </div>${arrow}
+            `;
+          }).join('');
+
+          const pct = Math.round((user.completed_count / user.total_stages) * 100);
+          const isFull = user.completed_count === user.total_stages;
+          const lastActive = user.last_activity
+            ? new Date(user.last_activity).toLocaleDateString('en', { month: 'short', day: 'numeric' })
+            : '—';
+
+          return `
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="uname">${user.name}</span>
+                  <span class="uemail">${user.email}</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                  <div class="stages-row">${stagesHtml}</div>
+                  <div class="prog-wrap">
+                    <div class="prog-bar">
+                      <div class="prog-fill ${isFull ? 'full' : ''}" style="width:${pct}%"></div>
+                    </div>
+                    <span class="prog-txt">${pct}%</span>
+                  </div>
+                </div>
+              </td>
+              <td style="font-size: 0.8rem; font-weight: 600; color: ${isFull ? '#059669' : 'var(--text-muted)'};">
+                ${user.completed_count} / ${user.total_stages}
+              </td>
+              <td>
+                <span class="${user.has_video ? 'badge-video-yes' : 'badge-video-no'}">
+                  ${user.has_video ? '🎬 Yes' : '—'}
+                </span>
+              </td>
+              <td style="font-size: 0.78rem; color: var(--text-muted);">${lastActive}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (e) {
+        console.error('Journey load error:', e);
+      }
+    }
+
+    async function loadRecords() {
+      try {
+        const res = await apiFetch('/admin/assessments');
+        if (!res) return;
+        allRecords = await res.json();
+
+        // Per-type breakdown KPI
+        const TYPE_COLORS = {
+          psychology:   '#6366f1',
+          neuroscience: '#06b6d4',
+          letter:       '#f59e0b',
+          astrology:    '#8b5cf6',
+          comprehensive:'#10b981'
+        };
+        const typeCounts = {};
+        STAGES.forEach(s => typeCounts[s] = 0);
+        allRecords.forEach(r => {
+          const t = r.type ? r.type.toLowerCase() : 'other';
+          if (typeCounts[t] !== undefined) typeCounts[t]++;
+        });
+        const maxCount = Math.max(...Object.values(typeCounts), 1);
+        const breakdownEl = document.getElementById('kpiTypeBreakdown');
+        breakdownEl.innerHTML = STAGES.map(stage => {
+          const count = typeCounts[stage] || 0;
+          const pct = Math.round((count / maxCount) * 100);
+          const color = TYPE_COLORS[stage] || '#6366f1';
+          return `
+            <div class="type-row">
+              <span class="type-name">${STAGE_LABELS[stage]}</span>
+              <div class="type-bar"><div class="type-fill" style="width:${pct}%;background:${color};"></div></div>
+              <span class="type-cnt">${count}</span>
+            </div>
+          `;
+        }).join('');
+
+        renderRecords(allRecords);
+      } catch (e) {
+        console.error('Records load error:', e);
+      }
+    }
+
+    function filterRecords() {
+      const type = document.getElementById('typeFilter').value;
+      const video = document.getElementById('videoFilter').value;
+      let filtered = allRecords;
+      if (type !== 'all') filtered = filtered.filter(r => r.type === type);
+      if (video === 'yes') filtered = filtered.filter(r => r.has_video);
+      if (video === 'no') filtered = filtered.filter(r => !r.has_video);
+      renderRecords(filtered);
+    }
+
+    function renderRecords(records) {
+      const tbody = document.getElementById('recordsTableBody');
+      if (!records.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">No records found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = records.map(r => `
+        <tr>
+          <td style="font-size:0.8rem;color:var(--text-muted);">${new Date(r.created_at).toLocaleString()}</td>
+          <td>
+            <div class="user-cell">
+              <span class="uname">${r.user_name}</span>
+              <span class="uemail">${r.user_email}</span>
+            </div>
+          </td>
+          <td><span class="badge type-${r.type}">${r.type}</span></td>
+          <td><span class="${r.has_video ? 'badge-video-yes' : 'badge-video-no'}">${r.has_video ? '🎬 Yes' : '—'}</span></td>
+          <td style="display:flex;gap:0.5rem;">
+            <button class="action-btn view-btn" onclick="viewResult('${r.id}', '${r.user_name}')"><i class='bx bx-show'></i> View</button>
+            <button class="action-btn delete-btn" onclick="deleteRecord('${r.id}')"><i class='bx bx-trash'></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function viewResult(id, name) {
+      document.getElementById('modalTitle').textContent = `Result — ${name}`;
+      document.getElementById('modalContent').textContent = 'Loading...';
+      document.getElementById('resultModal').style.display = 'flex';
+
+      const res = await apiFetch(`/admin/assessments/${id}/result`);
+      if (!res) return;
+      const data = await res.json();
+      document.getElementById('modalContent').textContent = JSON.stringify(data.result_data || data, null, 2);
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('Delete this assessment record?')) return;
+      const res = await apiFetch(`/admin/assessments/${id}`, { method: 'DELETE' });
+      if (res && res.ok) { loadRecords(); loadJourney(); }
+    }
+
+    function closeModal() {
+      document.getElementById('resultModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

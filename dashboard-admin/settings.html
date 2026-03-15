@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Health - Abrag Admin</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .health-card { background: var(--bg-surface); border-radius: 10px; padding: 1.25rem 1.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.2s; }
+    .health-card:hover { box-shadow: var(--card-shadow); }
+    .health-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .health-icon.ok { background: #d1fae5; color: #065f46; }
+    .health-icon.missing { background: #fee2e2; color: #991b1b; }
+    .health-info h4 { font-size: 0.875rem; font-weight: 600; margin: 0 0 0.2rem; color: var(--text-main); }
+    .health-info p { font-size: 0.78rem; margin: 0; }
+    .status-ok { color: #16a34a; }
+    .status-err { color: #dc2626; }
+    .status-banner { border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 500; }
+    .banner-ok { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .banner-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .info-card { background: var(--bg-surface); border-radius: 10px; padding: 1.25rem 1.5rem; border: 1px solid var(--border-color); margin-top: 1rem; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row label { color: var(--text-muted); }
+    .info-row span { font-weight: 500; color: var(--text-main); }
+    /* Admin Management */
+    .section-title { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin: 2rem 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .grant-form { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .grant-form input { flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 0.875rem; }
+    .grant-form input:focus { outline: 2px solid var(--primary-color); }
+    .btn-grant { padding: 0.6rem 1.2rem; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+    .btn-grant:hover { opacity: 0.9; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .admin-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-color); }
+    .admin-table td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .badge-admin { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.7rem; font-weight: 700; }
+    .btn-revoke { padding: 0.3rem 0.75rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .btn-revoke:hover { background: #fca5a5; }
+    #grantMsg { font-size: 0.82rem; margin-left: 0.5rem; font-weight: 500; }
+    .msg-ok { color: #16a34a; }
+    .msg-err { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">ABRAG</div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> Dashboard</a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> Users</a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> Assessments</a>
+        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> Videos</a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item active"><i class='bx bx-server'></i> System Health</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>System Health</strong> <span>|</span> API Keys &amp; Services</div>
+        </div>
+
+        <!-- Overall banner -->
+        <div id="overallBanner" class="status-banner banner-warn">
+          <i class='bx bx-loader-alt bx-spin' style="font-size:1.25rem;"></i>
+          Checking system status...
+        </div>
+
+        <!-- API Key Cards -->
+        <div class="health-grid" id="healthGrid">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Platform Info -->
+        <div class="info-card" style="margin-top:1.5rem;">
+          <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Platform Info</h4>
+          <div class="info-row"><label>Platform</label><span id="infoPlatform">—</span></div>
+          <div class="info-row"><label>Last Checked</label><span id="infoChecked">—</span></div>
+          <div class="info-row"><label>Backend URL</label><span id="infoURL">—</span></div>
+        </div>
+
+        <!-- ─── Admin Users Management ─────────────────────────────────────────── -->
+        <div class="section-title"><i class='bx bx-shield-alt-2' style="color: var(--primary-color);"></i> Admin Access Management</div>
+        <div class="info-card">
+          <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 1rem;">
+            Grant or revoke admin dashboard access. The user must already have an account on the platform.
+          </p>
+
+          <!-- Grant Form -->
+          <div class="grant-form">
+            <input type="email" id="grantEmailInput" placeholder="Enter user email..." />
+            <button class="btn-grant" onclick="grantAdmin()">
+              <i class='bx bx-user-plus'></i> Grant Access
+            </button>
+            <span id="grantMsg"></span>
+          </div>
+
+          <!-- Admin Table -->
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminsTableBody">
+              <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:1rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const serviceIcons = {
+      'OpenAI':       'bx-brain',
+      'Stability AI': 'bx-image',
+      'D-ID':         'bx-video-recording',
+      'Database':     'bx-data',
+      'JWT Secret':   'bx-lock-alt',
+      'Cloudinary':   'bx-cloud-upload',
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      fetchHealth();
+      loadAdmins();
+    });
+
+    async function fetchHealth() {
+      try {
+        const res = await apiFetch('/admin/health');
+        if (!res) return;
+        const data = await res.json();
+
+        const banner = document.getElementById('overallBanner');
+        if (data.overall === 'healthy') {
+          banner.className = 'status-banner banner-ok';
+          banner.innerHTML = `<i class='bx bx-check-circle' style="font-size:1.25rem;"></i> All systems operational`;
+        } else {
+          banner.className = 'status-banner banner-warn';
+          banner.innerHTML = `<i class='bx bx-error' style="font-size:1.25rem;"></i> Some services are not configured — check below`;
+        }
+
+        const grid = document.getElementById('healthGrid');
+        grid.innerHTML = Object.entries(data.services).map(([name, info]) => {
+          const icon = serviceIcons[name] || 'bx-cog';
+          const isOk = info.configured;
+          return `
+            <div class="health-card">
+              <div class="health-icon ${isOk ? 'ok' : 'missing'}">
+                <i class='bx ${icon}'></i>
+              </div>
+              <div class="health-info">
+                <h4>${name}</h4>
+                <p class="${isOk ? 'status-ok' : 'status-err'}">${info.status}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('infoPlatform').textContent = data.platform || '—';
+        document.getElementById('infoChecked').textContent = data.checked_at
+          ? new Date(data.checked_at).toLocaleString() : '—';
+        document.getElementById('infoURL').textContent = window.API_URL;
+
+      } catch (err) {
+        document.getElementById('overallBanner').innerHTML =
+          `<i class='bx bx-error'></i> Could not connect to backend.`;
+      }
+    }
+
+    // ─── Admin Management Logic ───────────────────────────────────────────────
+    let currentAdmins = [];
+
+    async function loadAdmins() {
+      const tbody = document.getElementById('adminsTableBody');
+      try {
+        const res = await apiFetch('/admin/admins');
+        if (!res) return;
+        currentAdmins = await res.json();
+        renderAdmins();
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:#dc2626;text-align:center;">Failed to load admins.</td></tr>`;
+      }
+    }
+
+    function renderAdmins() {
+      const tbody = document.getElementById('adminsTableBody');
+      if (!currentAdmins.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted);text-align:center;">No admins found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = currentAdmins.map(a => `
+        <tr>
+          <td>${a.name}</td>
+          <td style="color:var(--text-muted);">${a.email}</td>
+          <td><span class="badge-admin"><i class='bx bx-shield'></i> Admin</span></td>
+          <td>
+            <button class="btn-revoke" onclick="revokeAdmin('${a.id}', '${a.name}')">
+              <i class='bx bx-user-minus'></i> Revoke
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function grantAdmin() {
+      const email = document.getElementById('grantEmailInput').value.trim();
+      const msg = document.getElementById('grantMsg');
+      if (!email) { msg.textContent = 'Enter an email first.'; msg.className = 'msg-err'; return; }
+
+      msg.textContent = 'Processing...'; msg.className = '';
+      const res = await apiFetch('/admin/admins/grant', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+      if (!res) return;
+      const data = await res.json();
+      if (res.ok) {
+        msg.textContent = data.message;
+        msg.className = 'msg-ok';
+        document.getElementById('grantEmailInput').value = '';
+        loadAdmins();
+      } else {
+        msg.textContent = data.detail || 'Error granting access.';
+        msg.className = 'msg-err';
+      }
+    }
+
+    async function revokeAdmin(userId, name) {
+      if (!confirm(`Remove admin access from ${name}?`)) return;
+      const res = await apiFetch(`/admin/admins/revoke/${userId}`, { method: 'DELETE' });
+      if (!res) return;
+      const data = await res.json();
+      if (res.ok) {
+        loadAdmins();
+      } else {
+        alert(data.detail || 'Error revoking access.');
+      }
+    }
+  </script>
+</body>
+</html>

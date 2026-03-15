@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routes import psychology_router, neuroscience_router, letter_router, astrology_router, comprehensive_router, history_router
+from app.routes import psychology_router, neuroscience_router, letter_router, astrology_router, comprehensive_router, history_router, admin_router
 from app.auth import auth_router
 from app.database import init_db
 import os
@@ -48,6 +48,7 @@ app.include_router(letter_router)
 app.include_router(astrology_router)
 app.include_router(comprehensive_router)
 app.include_router(history_router)
+app.include_router(admin_router)
 
 # Serve generated media files (audio/video)
 os.makedirs("videos", exist_ok=True)
@@ -91,6 +92,13 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+# Serve the Admin Dashboard on /admin-ui/
+current_dir = os.path.dirname(os.path.abspath(__file__))
+dashboard_path = os.path.join(current_dir, "dashboard-admin")
+if os.path.exists(dashboard_path):
+    app.mount("/admin-ui", StaticFiles(directory=dashboard_path, html=True), name="admin_dashboard")
+
 
 
 if __name__ == "__main__":

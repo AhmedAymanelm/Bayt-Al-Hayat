@@ -20,6 +20,7 @@ class User(Base):
     place_of_birth = Column(String, nullable=False)
     time_of_birth = Column(Time, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
     profile_picture_url = Column(String, nullable=True)
     verification_code = Column(String(6), nullable=True)

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Videos - Abrag Admin</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .table-card { background: var(--bg-surface); border-radius: 8px; padding: 1.5rem; border: 1px solid var(--border-color); overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .data-table th { padding: 0.875rem 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border-color); text-transform: uppercase; letter-spacing: 0.05em; }
+    .data-table td { padding: 0.875rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+    .data-table tbody tr:hover { background: var(--bg-body); }
+    .badge { padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; display: inline-block; }
+    .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+    .btn-sm { padding: 0.3rem 0.65rem; border-radius: 5px; border: 1px solid; font-size: 0.78rem; cursor: pointer; font-weight: 500; transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .btn-play { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+    .btn-play:hover { background: #a7f3d0; }
+    .btn-dl { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .btn-dl:hover { background: #bfdbfe; }
+    .actions-cell { display: flex; gap: 0.4rem; }
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .empty-state i { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
+    /* Video Preview Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: #000; border-radius: 12px; padding: 1rem; width: 720px; max-width: 95vw; position: relative; }
+    .modal-close { position: absolute; top: -2rem; right: 0; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; }
+    video { width: 100%; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">ABRAG</div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> Dashboard</a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> Users</a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> Assessments</a>
+        <a href="videos.html" class="nav-item active"><i class='bx bx-video'></i> Videos</a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-server'></i> System Health</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
+          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>Videos</strong> <span>|</span> Generated Videos</div>
+          <div id="statsRow" style="font-size:0.8rem;color:var(--text-muted);">Loading...</div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-controls">
+            <h2 style="font-size: 1.1rem; font-weight: 600;">🎬 All Generated Videos</h2>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>User</th>
+                <th>Assessment Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="videosTableBody">
+              <tr><td colspan="4" class="empty-state"><i class='bx bx-loader-alt bx-spin'></i>Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Video Preview Modal -->
+  <div class="modal-overlay" id="videoModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()"><i class='bx bx-x'></i></button>
+      <video id="videoPlayer" controls autoplay></video>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const typeBadgeMap = {
+      psychology: 'background:#e0e7ff;color:#3730a3',
+      neuroscience: 'background:#dcfce7;color:#166534',
+      letter: 'background:#fef3c7;color:#92400e',
+      astrology: 'background:#fae8ff;color:#86198f',
+      comprehensive: 'background:#ffedd5;color:#9a3412'
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      fetchVideos();
+    });
+
+    async function fetchVideos() {
+      const tbody = document.getElementById('videosTableBody');
+      try {
+        const res = await apiFetch('/admin/assessments');
+        if (!res) return;
+        const all = await res.json();
+        const videos = all.filter(a => a.has_video && a.video_url);
+        document.getElementById('statsRow').textContent = `${videos.length} videos generated`;
+
+        if (!videos.length) {
+          tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class='bx bx-video-off'></i>No videos generated yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = videos.map(item => {
+          const style = typeBadgeMap[item.type] || 'background:#f3f4f6;color:#374151';
+          const typeBadge = `<span style="${style};padding:0.2rem 0.6rem;border-radius:999px;font-size:0.72rem;font-weight:600;">${item.type}</span>`;
+          const date = new Date(item.created_at).toLocaleString();
+          return `
+            <tr>
+              <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
+              <td>
+                <div style="font-weight:600;">${item.user_name || '—'}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">${item.user_email}</div>
+              </td>
+              <td>${typeBadge}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn-sm btn-play" onclick="playVideo('${item.video_url}')"><i class='bx bx-play'></i> Preview</button>
+                  <a class="btn-sm btn-dl" href="${item.video_url}" target="_blank" download><i class='bx bx-download'></i> Download</a>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class='bx bx-error'></i>Failed to load.</td></tr>`;
+      }
+    }
+
+    function playVideo(url) {
+      document.getElementById('videoPlayer').src = url;
+      document.getElementById('videoModal').classList.add('show');
+    }
+
+    function closeModal() {
+      const player = document.getElementById('videoPlayer');
+      player.pause();
+      player.src = '';
+      document.getElementById('videoModal').classList.remove('show');
+    }
+
+    document.getElementById('videoModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  </script>
+</body>
+</html>

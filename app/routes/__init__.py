@@ -4,6 +4,7 @@ from .letter import router as letter_router
 from .astrology import router as astrology_router
 from .comprehensive import router as comprehensive_router
 from .history import router as history_router
+from .admin import router as admin_router
 
 __all__ = [
     "psychology_router",
@@ -11,5 +12,6 @@ __all__ = [
     "letter_router",
     "astrology_router",
     "comprehensive_router",
-    "history_router"
+    "history_router",
+    "admin_router"
 ]

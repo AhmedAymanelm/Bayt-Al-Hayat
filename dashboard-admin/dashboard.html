@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Abrag Admin</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">ABRAG</div>
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item active"><i class='bx bx-desktop'></i> Dashboard</a>
+        <div class="nav-divider"></div>
+        <a href="users.html" class="nav-item"><i class='bx bx-group'></i> Users</a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> Assessments</a>
+        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> Videos</a>
+        <div class="nav-divider"></div>
+        <a href="settings.html" class="nav-item"><i class='bx bx-server'></i> System Health</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="toggleTheme" title="Toggle Dark Mode"><i class='bx bx-moon'></i></button>
+          <button class="btn-icon" id="toggleFullscreen" title="Fullscreen"><i class='bx bx-fullscreen'></i></button>
+          <div class="user-profile">
+            <div class="avatar"><i class='bx bx-user'></i></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+
+        <div class="dashboard-header-info">
+          <div class="breadcrumb"><strong>Dashboard</strong> <span>|</span> Overview</div>
+          <div class="date-time-display" id="currentDateTime">--</div>
+        </div>
+
+        <div class="welcome-banner">
+          <div class="welcome-banner-text">
+            <h1>Admin Dashboard</h1>
+            <p>Platform statistics and live performance overview</p>
+          </div>
+          <div class="banner-icon"><i class='bx bx-trending-up'></i></div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-1"><i class='bx bx-group'></i></div>
+            <div class="kpi-info">
+              <h3>—</h3>
+              <p>Total Users</p>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-2"><i class='bx bx-check-shield'></i></div>
+            <div class="kpi-info">
+              <h3>—</h3>
+              <p>Active Users</p>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-3"><i class='bx bx-book-reader'></i></div>
+            <div class="kpi-info">
+              <h3>—</h3>
+              <p>Assessments Done</p>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-4"><i class='bx bx-video-plus'></i></div>
+            <div class="kpi-info">
+              <h3>—</h3>
+              <p>Videos Generated</p>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap" style="background: rgba(249,115,22,0.15); color:#f97316;"><i
+                class='bx bx-user-plus'></i></div>
+            <div class="kpi-info">
+              <h3>—</h3>
+              <p>New Users (30d)</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Charts -->
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+          <div class="card"
+            style="background: var(--bg-surface); padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);">📈 User Registration Trend</h4>
+            <div style="height: 200px;"><canvas id="userGrowthChart"></canvas></div>
+          </div>
+          <div class="card"
+            style="background: var(--bg-surface); padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);">👥 Users Age Distribution</h4>
+            <div style="height: 200px;"><canvas id="assessmentPieChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- NEW: Journey Drop-off Analysis Section -->
+        <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--text-main);">🛤️ Assessment Journey Drop-off
+        </h3>
+        <div class="card"
+          style="background: var(--bg-surface); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem;"
+          id="journeyDropoffContainer">
+          <!-- Populated by JS -->
+          <div style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading journey data...</div>
+        </div>
+
+        <!-- Quick Links -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
+          <a href="users.html" class="kpi-card" style="text-decoration: none; cursor: pointer;">
+            <div class="kpi-icon-wrap kpi-icon-1"><i class='bx bx-group'></i></div>
+            <div class="kpi-info">
+              <h3 style="font-size: 1rem;">Manage Users</h3>
+              <p>View, activate, or delete users</p>
+            </div>
+          </a>
+          <a href="assessments.html" class="kpi-card" style="text-decoration: none; cursor: pointer;">
+            <div class="kpi-icon-wrap kpi-icon-3"><i class='bx bx-book-open'></i></div>
+            <div class="kpi-info">
+              <h3 style="font-size: 1rem;">Assessments Log</h3>
+              <p>Browse and review all assessments</p>
+            </div>
+          </a>
+          <a href="settings.html" class="kpi-card" style="text-decoration: none; cursor: pointer;">
+            <div class="kpi-icon-wrap kpi-icon-2"><i class='bx bx-server'></i></div>
+            <div class="kpi-info">
+              <h3 style="font-size: 1rem;">System Health</h3>
+              <p>API keys and service status</p>
+            </div>
+          </a>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
