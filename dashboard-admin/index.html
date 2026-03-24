@@ -3,39 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - Abrag Admin Dashboard</title>
+  <title>Login - بيت الحياة</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="i18n.js?v=3"></script>
 </head>
 <body class="login-page">
+  <div style="position: absolute; top: 1rem; right: 1rem; z-index: 100;">
+    <button class="btn-icon" id="toggleLanguage" title="Switch Language" style="background: var(--bg-surface); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+      <span data-i18n="switch-lang">عربي</span>
+    </button>
+  </div>
 
   <div class="login-card-wrapper">
-    <div class="logo-badge">A</div>
+    <div class="logo-badge">B</div>
     <div class="login-card">
-      <h2>Login</h2>
+      <h2 data-i18n="login-title">Login</h2>
       
       <form id="loginForm">
         <div class="form-group">
-          <input type="email" id="email" class="form-control" placeholder="Enter your email" required />
+          <input type="email" id="email" class="form-control" placeholder="Enter your email" required data-i18n="label-email" />
         </div>
         
         <div class="form-group">
-          <input type="password" id="password" class="form-control" placeholder=".........." required />
+          <input type="password" id="password" class="form-control" placeholder=".........." required data-i18n="label-password" />
         </div>
         
         <div class="login-options" style="justify-content: center;">
           <label class="checkbox-label">
             <input type="checkbox" id="rememberMe">
-            Remember Me
+            <span data-i18n="remember-me">Remember Me</span>
           </label>
         </div>
         
-        <button type="submit" class="btn btn-primary w-100">LOGIN</button>
+        <button type="submit" class="btn btn-primary w-100" data-i18n="login-btn">LOGIN</button>
       </form>
       
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -45,7 +51,8 @@
       
       if (!email || !password) return;
 
-      submitBtn.textContent = 'LOGGING IN...';
+      const lang = localStorage.getItem('dashboard_lang') || 'en';
+      submitBtn.textContent = translations[lang]['login-loading'] || 'LOGGING IN...';
       submitBtn.disabled = true;
 
       try {
@@ -62,13 +69,14 @@
           window.location.href = 'dashboard.html';
         } else {
           const errData = await response.json();
-          alert(errData.detail || 'Login failed! Check your credentials.');
+          alert(errData.detail || translations[lang]['login-failed'] || 'Login failed! Check your credentials.');
         }
       } catch (err) {
         console.error('Login error:', err);
         alert('Server unreachable. Make sure backend is running.');
       } finally {
-        submitBtn.textContent = 'LOGIN';
+        const currentLang = localStorage.getItem('dashboard_lang') || 'en';
+        submitBtn.textContent = translations[currentLang]['login-btn'] || 'LOGIN';
         submitBtn.disabled = false;
       }
     });

@@ -492,3 +492,86 @@ body.dark-mode .badge-success { background: #064e3b; color: #6ee7b7; }
 body.dark-mode .badge-danger  { background: #7f1d1d; color: #fca5a5; }
 body.dark-mode .badge-gray    { background: #1f2937; color: #9ca3af; }
 body.dark-mode .badge-blue    { background: #1e3a5f; color: #93c5fd; }
+/* --- RTL Support --- */
+[dir="rtl"] {
+  --sidebar-width: 260px;
+}
+
+[dir="rtl"] body {
+  text-align: right;
+}
+
+[dir="rtl"] .sidebar {
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .nav-item {
+  flex-direction: row;
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+[dir="rtl"] .nav-item i {
+  margin-left: 1rem;
+  margin-right: 0;
+}
+
+[dir="rtl"] .nav-item.active {
+  border-left: none;
+  border-right: 3px solid var(--primary-color);
+  padding-right: calc(1.5rem - 3px);
+  padding-left: 1.5rem;
+}
+
+[dir="rtl"] .header-right {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .user-profile {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+[dir="rtl"] .breadcrumb strong {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+[dir="rtl"] .kpi-card {
+  text-align: right;
+  flex-direction: row;
+}
+
+[dir="rtl"] .kpi-icon-wrap {
+  margin-left: 1.5rem;
+  margin-right: 0;
+}
+
+[dir="rtl"] .sidebar.collapsed .nav-item {
+  padding: 0.875rem;
+}
+
+[dir="rtl"] .modal-close {
+  right: auto;
+  left: 1rem;
+}
+
+[dir="rtl"] .search-box i {
+  left: auto;
+  right: 0.875rem;
+}
+
+[dir="rtl"] .search-box input {
+  padding-left: 1rem;
+  padding-right: 2.4rem;
+}
+
+[dir="rtl"] .btn-sm i {
+  margin-left: 4px;
+}
+
+/* Fix for charts and layout elements that might need forced LTR */
+[dir="rtl"] .chart-container, [dir="rtl"] canvas {
+  direction: ltr;
+}

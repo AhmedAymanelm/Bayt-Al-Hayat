@@ -4,9 +4,15 @@
   <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   
-  <h1>🔮 Abrag — Mental Wellness & Astrology App</h1>
+  <h1>🏛️ Bayt Al Hayat — Mental Wellness & Astrology App</h1>
   <p>A comprehensive backend for AI-powered astrology, psychology, and neuroscience analysis with a fully-featured Admin Dashboard and payment integration.</p>
 </div>
+
+---
+
+## 📝 Project Overview
+
+**Bayt Al Hayat (House of Life)** is an AI-driven personality insights platform. It analyzes users through multiple lenses—psychological, neurological, and astrological—to generate deeply personalized reports. These reports are then transformed into cinematic, AI-generated video journeys, proving a unique and immersive self-discovery experience.
 
 ---
 
@@ -59,8 +65,8 @@
 
 ### 2. Clone the repository
 ```bash
-git clone https://github.com/your-org/abrag.git
-cd abrag
+git clone https://github.com/your-org/bayt-al-hayat.git
+cd bayt-al-hayat
 ```
 
 ### 3. Setup Virtual Environment
@@ -103,7 +109,7 @@ To access the Dashboard, you need an admin user:
 ```bash
 python create_admin.py
 ```
-*(This will create `admin@abrag.com` with password `123456`)*
+*(This will create `admin@baytalhayat.com` with password `123456`)*
 
 ### 7. Run the Server
 ```bash
@@ -133,7 +139,7 @@ This repository is optimized for deployment on **Railway**. All configuration fi
 ## 📂 Project Structure
 
 ```text
-abrag/
+baytalhayat/
 ├── main.py                 # FastAPI Application Entry
 ├── create_admin.py         # Utility to seed the database with an Admin
 ├── requirements.txt        # Python packages

@@ -46,9 +46,16 @@ async def register_user(user_data: UserRegisterRequest, background_tasks: Backgr
     await db.commit()
     await db.refresh(new_user)
 
+    # Automatically generate tokens for the new user so they are logged in immediately
+    access_token = create_access_token(data={"sub": str(new_user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(new_user.id)})
+
     return {
         "message": "تم تسجيل المستخدم بنجاح.",
         "user": new_user,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
     }
 
 

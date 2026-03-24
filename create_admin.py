@@ -28,7 +28,7 @@ async def run():
     
     async with async_session() as session:
         # Check if user exists by querying the table directly
-        res = await session.execute(text("SELECT id FROM users WHERE email = 'admin@abrag.com'"))
+        res = await session.execute(text("SELECT id FROM users WHERE email = 'admin@baytalhayat.com'"))
         row = res.fetchone()
         
         hp = get_password_hash("123456")
@@ -38,15 +38,15 @@ async def run():
                 "INSERT INTO users (id, email, hashed_password, fullname, date_of_birth, place_of_birth, is_active, is_verified, is_admin, created_at) "
                 "VALUES (:id, :email, :hp, :fullname, :dob, :pob, :ia, :iv, :is_admin, :ca)"
             ), {
-                "id": uid, "email": "admin@abrag.com", "hp": hp, "fullname": "Super Admin", 
+                "id": uid, "email": "admin@baytalhayat.com", "hp": hp, "fullname": "Super Admin", 
                 "dob": date(1990, 1, 1), "pob": "Cairo", "ia": True, "iv": True, "is_admin": True, "ca": datetime.utcnow()
             })
-            print("✅ Admin user CREATED successfully. (Email: admin@abrag.com | Pass: 123456)")
+            print("✅ Admin user CREATED successfully. (Email: admin@baytalhayat.com | Pass: 123456)")
         else:
             await session.execute(text(
-                "UPDATE users SET hashed_password = :hp, is_active = :ia, is_verified = :iv, is_admin = :is_admin WHERE email = 'admin@abrag.com'"
+                "UPDATE users SET hashed_password = :hp, is_active = :ia, is_verified = :iv, is_admin = :is_admin WHERE email = 'admin@baytalhayat.com'"
             ), {"hp": hp, "ia": True, "iv": True, "is_admin": True})
-            print("✅ Admin user UPDATED successfully. (Email: admin@abrag.com | Pass: 123456)")
+            print("✅ Admin user UPDATED successfully. (Email: admin@baytalhayat.com | Pass: 123456)")
         await session.commit()
     print("🎉 Done!")
 

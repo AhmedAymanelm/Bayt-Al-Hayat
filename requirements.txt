@@ -17,3 +17,5 @@ email-validator>=2.1.0
 fastapi-mail>=1.4.1
 python-multipart>=0.0.12
 cloudinary>=1.36.0
+runwayml>=0.1.0
+ffmpeg-python

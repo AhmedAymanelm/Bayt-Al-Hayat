@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Users - Abrag Admin</title>
+  <title>Users - بيت الحياة</title>
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="styles.css" />
+  <script src="i18n.js?v=3"></script>
   <style>
     .table-card { background: var(--bg-surface); border-radius: 8px; padding: 1.5rem; border: 1px solid var(--border-color); overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -51,18 +52,18 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">ABRAG</div>
+      <div class="sidebar-logo" data-i18n="sidebar-logo">Bayt Al Hayat</div>
       <nav class="nav-menu">
-        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> Dashboard</a>
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
         <div class="nav-divider"></div>
-        <a href="users.html" class="nav-item active"><i class='bx bx-group'></i> Users</a>
-        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> Assessments</a>
-        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> Videos</a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> Payments</a>
+        <a href="users.html" class="nav-item active"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
+        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> <span data-i18n="nav-videos">Videos</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
         <div class="nav-divider"></div>
-        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> Settings</a>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
         <div class="nav-divider"></div>
-        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> Logout</a>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
@@ -72,6 +73,7 @@
           <button class="btn-icon" id="toggleSidebar"><i class='bx bx-menu'></i></button>
         </div>
         <div class="header-right">
+          <button class="btn-icon" id="toggleLanguage" title="Switch Language"><span>عربي</span></button>
           <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
           <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
         </div>
@@ -79,29 +81,29 @@
 
       <div class="dashboard-body">
         <div class="dashboard-header-info">
-          <div class="breadcrumb"><strong>Users</strong> <span>|</span> User Management</div>
+          <div class="breadcrumb"><strong data-i18n="breadcrumb-users">Users</strong> <span>|</span> <span data-i18n="breadcrumb-mgmt">User Management</span></div>
           <div id="statsRow" class="stats-row">Loading...</div>
         </div>
 
         <div class="table-card">
           <div class="table-controls">
-            <h2 style="font-size: 1.1rem; font-weight: 600;">All Users</h2>
+            <h2 style="font-size: 1.1rem; font-weight: 600;" data-i18n="users-title">All Users</h2>
             <div class="search-box">
               <i class='bx bx-search'></i>
-              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email..." oninput="filterUsers()">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email..." oninput="filterUsers()" data-i18n="users-search-placeholder">
             </div>
           </div>
 
           <table class="data-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Birth Info</th>
-                <th>Assessments</th>
-                <th>Joined</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th data-i18n="table-user">User</th>
+                <th data-i18n="table-email">Email</th>
+                <th data-i18n="table-birth">Birth Info</th>
+                <th data-i18n="table-assessments">Assessments</th>
+                <th data-i18n="table-joined">Joined</th>
+                <th data-i18n="table-status">Status</th>
+                <th data-i18n="table-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -129,7 +131,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
   <script>
     let allUsers = [];
 
@@ -160,6 +162,7 @@
         allUsers = await res.json();
         document.getElementById('statsRow').textContent = `${allUsers.length} total users · ${allUsers.filter(u => u.is_active).length} active`;
         renderUsers(allUsers);
+        if (window.applyTranslations) window.applyTranslations();
       } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class='bx bx-error'></i>Failed to load users.</td></tr>`;
@@ -198,15 +201,19 @@
             <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
             <td>${statusBadge}</td>
             <td>
-              <div class="actions-cell">
-                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')"><i class='bx bx-show'></i> View</button>
-                <button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', '${name}')">${u.is_active ? '<i class=\'bx bx-block\'></i> Block' : '<i class=\'bx bx-check\'></i> Activate'}</button>
-                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')"><i class='bx bx-trash'></i></button>
+              <div class="actions">
+                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')"><i class='bx bx-show'></i> <span data-i18n="action-view">View</span></button>
+                ${u.is_active 
+                  ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', false)"><i class='bx bx-block'></i> <span data-i18n="action-block">Block</span></button>`
+                  : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', true)"><i class='bx bx-check'></i> <span data-i18n="action-activate">Activate</span></button>`
+                }
+                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')"><i class='bx bx-trash'></i> <span data-i18n="action-delete">Delete</span></button>
               </div>
             </td>
           </tr>
         `;
       }).join('');
+      if (window.applyTranslations) window.applyTranslations();
     }
 
     async function viewUser(userId) {

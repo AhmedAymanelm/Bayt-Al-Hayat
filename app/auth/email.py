@@ -7,7 +7,7 @@ load_dotenv(override=True)
 # Brevo HTTP API (works on Railway - no SMTP port blocking)
 BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "sirahmedayman@gmail.com")
-MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "Abrag")
+MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "بيت الحياة")
 
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
@@ -38,7 +38,7 @@ async def _send_email(to_email: str, subject: str, html_content: str):
 async def send_verification_email(email_to: str, token: str):
     html = f"""
     <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; padding: 20px;">
-        <h2>تأكيد حساب أبراغ</h2>
+        <h2>تأكيد حساب بيت الحياة</h2>
         <p>مرحباً بك! لتأكيد حسابك، انسخ الكود التالي:</p>
         <div style="background: #f4f4f4; padding: 15px; margin: 20px 0; border-radius: 5px; word-break: break-all; text-align: left;" dir="ltr">
             <strong>{token}</strong>
@@ -46,7 +46,7 @@ async def send_verification_email(email_to: str, token: str):
         <p>هذا الكود صالح لمدة 24 ساعة.</p>
     </div>
     """
-    await _send_email(email_to, "تأكيد حسابك - Abrag", html)
+    await _send_email(email_to, "تأكيد حسابك - بيت الحياة", html)
 
 
 async def send_reset_password_email(email_to: str, token: str):
@@ -61,4 +61,4 @@ async def send_reset_password_email(email_to: str, token: str):
         <p>إذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة.</p>
     </div>
     """
-    await _send_email(email_to, "إعادة تعيين كلمة المرور - Abrag", html)
+    await _send_email(email_to, "إعادة تعيين كلمة المرور - بيت الحياة", html)

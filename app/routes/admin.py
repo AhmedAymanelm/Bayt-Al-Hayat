@@ -527,7 +527,7 @@ async def get_system_health(
     return {
         "overall": "healthy" if all_ok else "degraded",
         "services": health_status,
-        "platform": "Abrag Admin Engine",
+        "platform": "Bayt Al Hayat (بيت الحياة) Admin Engine",
         "checked_at": datetime.utcnow().isoformat()
     }
 

@@ -26,3 +26,4 @@ test_videos/
 *.mp3
 *.mp4
 *.wav
+create_admin.py

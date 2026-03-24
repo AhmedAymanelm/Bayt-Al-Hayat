@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from app.database import get_db
 from app.auth.models import User
@@ -65,8 +65,11 @@ async def submit_psychology_answers(
 async def generate_psychology_video(
     submission: AnswersSubmission,
     name: str = "Friend",
-    model: str = "gpt4o",
-    voice: str = "nova",
+    model: str = "gen4.5",
+    neuro_pattern: Optional[str] = None,
+    zodiac_sign: Optional[str] = None,
+    avatar: str = "",
+    include_video: bool = True,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -96,10 +99,13 @@ async def generate_psychology_video(
         }
         
         video_result = await AIVideoService.generate_full_video(
-            video_data, 
+            video_data,
             "videos/psychology",
+            neuro_pattern=neuro_pattern,
+            zodiac_sign=zodiac_sign,
+            avatar=avatar,
             model=model,
-            voice=voice
+            include_video=include_video
         )
         
         # Save to history

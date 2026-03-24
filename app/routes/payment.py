@@ -102,7 +102,7 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         "amount": str(amount),
         "currency": currency,
         "order": order_id,
-        "merchantRedirect": "https://abrag.redirect/payment-success",
+        "merchantRedirect": "https://baytalhayat.redirect/payment-success",
         "display": "en",
         "type": "one-time",
         "allowedMethods": "card,wallet",

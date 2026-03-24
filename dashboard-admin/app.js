@@ -40,7 +40,29 @@ window.requireAuth = () => {
 // ─── Shared UI Setup ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Live clock
+  // Initialize i18n
+  if (window.initI18n) window.initI18n();
+
+  // Language toggle
+  const langBtn = document.getElementById('toggleLanguage');
+  if (langBtn) {
+    langBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('🔘 Language toggle clicked');
+      const current = localStorage.getItem('dashboard_lang') || 'en';
+      const next = current === 'en' ? 'ar' : 'en';
+      
+      if (typeof setLanguage === 'function') {
+        setLanguage(next);
+        // Reload page-specific elements if needed
+        if (typeof loadDashboard === 'function' && document.querySelector('.kpi-grid')) {
+          loadDashboard();
+        }
+      } else {
+        console.error('❌ setLanguage function not found!');
+      }
+    });
+  }
   const timeDisplay = document.getElementById('currentDateTime');
   if (timeDisplay) {
     const tick = () => {
@@ -126,6 +148,7 @@ async function loadDashboard() {
     }
 
     initCharts(stats, growth);
+    if (window.applyTranslations) window.applyTranslations();
   } catch (err) {
     console.error('Dashboard load error:', err);
   }
@@ -201,12 +224,20 @@ function initCharts(stats, growth) {
       journeyContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 1rem;">Not enough data yet.</div>';
     } else {
       const stageOrder = [
-        "Letter Science",
-        "Astrology",
-        "Psychology",
-        "Neuroscience",
-        "Comprehensive"
+        "letter",
+        "astrology",
+        "psychology",
+        "neuroscience",
+        "comprehensive"
       ];
+
+      const stageLabels = {
+        "letter": "Letter Science",
+        "astrology": "Astrology",
+        "psychology": "Psychology",
+        "neuroscience": "Neuroscience",
+        "comprehensive": "Comprehensive"
+      };
 
       const icons      = ['bx-text', 'bx-star', 'bx-brain', 'bx-network-chart', 'bx-trophy'];
       const stageColors = ['#f59e0b', '#8b5cf6', '#6366f1', '#06b6d4', '#10b981'];
@@ -245,7 +276,7 @@ function initCharts(stats, growth) {
             <div style="width:52px;height:52px;border-radius:12px;background:${bg};color:${color};display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:0.6rem;border:1.5px solid ${color}40;">
               <i class='bx ${icons[i]}'></i>
             </div>
-            <span style="font-size:0.78rem;font-weight:600;color:var(--text-main);margin-bottom:0.2rem;">${stage}</span>
+            <span style="font-size:0.78rem;font-weight:600;color:var(--text-main);margin-bottom:0.2rem;" data-i18n="type-${stage}">${stageLabels[stage]}</span>
             <span style="font-size:0.8rem;font-weight:700;color:${color};">${count} <i class='bx bx-user' style="font-size:0.7rem;font-weight:400;color:var(--text-muted);"></i></span>
           </div>`;
       });

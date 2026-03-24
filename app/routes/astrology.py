@@ -25,12 +25,15 @@ class VideoGenerationRequest(BaseModel):
     birth_time: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    model: str = Field(default="gpt4o", description="AI model: gpt4, gpt4o, gpt35")
-    voice: str = Field(default="nova", description="Voice: alloy, echo, fable, onyx, nova, shimmer")
-    speed: float = Field(default=0.95, ge=0.5, le=2.0)
+    model: str = Field(default="gen4.5", description="Runway model")
+    voice: str = Field(default="none", description="Disabled")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
     use_cache: bool = True
-    include_video: bool = False
-    avatar: str = Field(default="arabic_female", description="Avatar preset")
+    include_video: bool = True
+    avatar: str = Field(default="", description="User photo URL")
+    # New fields for symbol & color selection
+    zodiac_sign: Optional[str] = Field(default=None, description="e.g. العقرب or Scorpio")
+    neuro_pattern: Optional[str] = Field(default=None, description="e.g. Fight, Flight, Freeze, Fawn")
 
 
 @router.post("/analyze", response_model=AstrologyResponse)
@@ -87,6 +90,8 @@ async def generate_astrology_video(
         
         video_result = await AIVideoService.generate_full_video(
             result_dict,
+            neuro_pattern=request.neuro_pattern,
+            zodiac_sign=request.zodiac_sign or result_dict.get("sign"),
             model=request.model,
             voice=request.voice,
             speed=request.speed,

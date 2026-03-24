@@ -17,7 +17,7 @@ async def upload_profile_picture(file_bytes: bytes, user_id: str) -> str:
     """Upload profile picture to Cloudinary and return the URL"""
     result = cloudinary.uploader.upload(
         file_bytes,
-        folder="abrag/profile_pictures",
+        folder="bayt_al_hayat/profile_pictures",
         public_id=str(user_id),
         overwrite=True,
         resource_type="image",
@@ -31,5 +31,5 @@ async def upload_profile_picture(file_bytes: bytes, user_id: str) -> str:
 
 async def delete_profile_picture(user_id: str):
     """Delete profile picture from Cloudinary"""
-    public_id = f"abrag/profile_pictures/{user_id}"
+    public_id = f"bayt_al_hayat/profile_pictures/{user_id}"
     cloudinary.uploader.destroy(public_id, resource_type="image")

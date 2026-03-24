@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
+import asyncio
 
 from app.database import get_db
 from app.auth.models import User
@@ -99,7 +100,7 @@ async def generate_comprehensive_video(
                 detail="Payment required for AI video generation. Please complete the payment first."
             )
             
-        # 2. Proceed with Video Generation
+        # 2. Proceed with Video Generation and AI Text Report Generation Concurrently
         video_data = await ComprehensiveService.analyze_all(
             name=submission.name,
             psychology_answers=submission.psychology_answers,
@@ -109,26 +110,37 @@ async def generate_comprehensive_video(
             birth_place=submission.birth_place
         )
         
-        video_result = await AIVideoService.generate_full_video(
+        # Start both Heavy API calls concurrently to save time
+        video_task = asyncio.create_task(AIVideoService.generate_full_video(
             video_data,
             "videos/comprehensive",
             model=model,
             voice=voice
-        )
+        ))
+        
+        report_task = asyncio.create_task(ComprehensiveService.generate_comprehensive_report(
+            name=submission.name,
+            psychology_result=video_data.get("psychology", {}),
+            neuroscience_result=video_data.get("neuroscience", {}),
+            astrology_result=video_data.get("astrology", {})
+        ))
+        
+        video_result, report_result = await asyncio.gather(video_task, report_task)
         
         # Save to history
         history_entry = AssessmentHistory(
             user_id=current_user.id,
             assessment_type="comprehensive",
             input_data=submission.model_dump(),
-            result_data={"analysis": video_data, "video": video_result},
-            video_url=video_result.get("final_video")
+            result_data={"analysis": video_data, "report": report_result, "video": video_result},
+            video_url=video_result.get("video_url") if isinstance(video_result, dict) else None
         )
         db.add(history_entry)
         await db.commit()
         
         return {
             "analysis": video_data,
+            "report": report_result,
             "video": video_result,
             "payment_order_id": payment.order_id
         }
