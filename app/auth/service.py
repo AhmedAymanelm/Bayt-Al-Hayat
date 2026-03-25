@@ -126,7 +126,7 @@ async def forget_password(data: ForgetPasswordRequest, background_tasks: Backgro
     }
 
 
-async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> dict:
+async def verify_reset_code(data: VerifyResetCodeRequest, db: AsyncSession) -> dict:
     # Find user
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
@@ -149,6 +149,26 @@ async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> dict:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="انتهت صلاحية رمز التحقق"
+        )
+
+    # Generate persistent reset token (valid for 15 mins)
+    reset_token = create_reset_token(user.email)
+
+    return {
+        "reset_token": reset_token,
+        "message": "تم التحقق من الرمز بنجاح. يمكنك الآن تعيين كلمة مرور جديدة."
+    }
+
+
+async def reset_password(data: ResetPasswordRequest, email: str, db: AsyncSession) -> dict:
+    # Find user
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="المستخدم غير موجود"
         )
 
     # Update password and clear code

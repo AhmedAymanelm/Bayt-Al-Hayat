@@ -77,9 +77,16 @@ class ForgetPasswordResponse(BaseModel):
     message: str
 
 
-class ResetPasswordRequest(BaseModel):
+class VerifyResetCodeRequest(BaseModel):
     email: EmailStr
     verification_code: str
+
+
+class VerifyResetCodeResponse(BaseModel):
+    reset_token: str
+
+
+class ResetPasswordRequest(BaseModel):
     new_password: str
 
     @field_validator("new_password")
