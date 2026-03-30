@@ -3,7 +3,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status, BackgroundTasks
 from jose import JWTError
 
-from app.auth.email import send_verification_email, send_reset_password_email
+from app.auth.email import send_reset_password_email
 
 from app.auth.models import User
 from app.auth.schemas import UserRegisterRequest, LoginRequest, ForgetPasswordRequest, ResetPasswordRequest, VerifyResetCodeRequest

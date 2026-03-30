@@ -6,6 +6,7 @@ class ComprehensiveAnswers(BaseModel):
     """Complete answers for all assessments"""
     
     name: str = Field(..., description="User name")
+    age: Optional[int] = Field(None, description="User age for letter science")
     
     psychology_answers: List[int] = Field(..., min_length=7, max_length=7)
     
@@ -18,6 +19,9 @@ class ComprehensiveAnswers(BaseModel):
     gender: Optional[str] = Field(None, description="male/female")
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    
+    # Optional: pre-computed letter result from /letter/analyze
+    letter_result: Optional[Dict[str, Any]] = Field(None, description="Pre-computed letter science result")
 
 
 class ComprehensiveResultsInput(BaseModel):

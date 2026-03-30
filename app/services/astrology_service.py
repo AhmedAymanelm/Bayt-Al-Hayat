@@ -2,15 +2,12 @@ import httpx
 from datetime import datetime
 from typing import Dict, Any, Optional
 from ..models.astrology import AstrologyRequest, AstrologyResponse
-
-
+from app.utils.settings_helper import get_env_or_db
 class AstrologyService:
     """خدمة منطق الأعمال لعلم الفلك"""
     
 
-    ASTROLOGY_API_BASE = "https://json.freeastrologyapi.com"
-    API_KEY = "o2FTsykdik4V1XjgoouZo9rFgykhnhbbaVwNc63z"
-    
+    ASTROLOGY_API_BASE_DEFAULT = "https://json.freeastrologyapi.com"
 
     ZODIAC_SIGNS_AR = {
         "aries": "الحمل",
@@ -114,10 +111,13 @@ class AstrologyService:
             target_date = datetime.now() - timedelta(days=1)
         
 
-        url = f"{cls.ASTROLOGY_API_BASE}/western/planets"
+        api_base = await get_env_or_db("astrology_api_base") or cls.ASTROLOGY_API_BASE_DEFAULT
+        api_key = await get_env_or_db("astrology_api_key")
+        
+        url = f"{api_base}/western/planets"
         
         headers = {
-            "x-api-key": cls.API_KEY,
+            "x-api-key": api_key,
             "Content-Type": "application/json"
         }
         

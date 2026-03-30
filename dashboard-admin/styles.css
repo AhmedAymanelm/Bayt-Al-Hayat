@@ -62,6 +62,75 @@ body {
 .btn-primary { background-color: var(--primary-color); color: white; }
 .btn-primary:hover { background-color: var(--primary-hover); }
 
+/* Table Action Buttons - Creative & Premium */
+.btn-sm, .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.btn-sm::before, .action-btn::before {
+  content: ''; 
+  position: absolute; 
+  top: 0; left: -100%; 
+  width: 50%; height: 100%; 
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); 
+  transition: 0.5s;
+}
+
+.btn-sm:hover::before, .action-btn:hover::before {
+  left: 150%;
+}
+
+.btn-view, .view-btn {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #4338ca;
+  border-color: #a5b4fc;
+}
+
+.btn-view:hover, .view-btn:hover {
+  background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+  color: #312e81;
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 15px -3px rgba(67, 56, 202, 0.25), 0 4px 6px -2px rgba(67, 56, 202, 0.1);
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border-color: #86efac;
+}
+
+.btn-info:hover {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  color: #14532d;
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 15px -3px rgba(22, 101, 52, 0.25), 0 4px 6px -2px rgba(22, 101, 52, 0.1);
+}
+
+.btn-view i, .view-btn i, .btn-info i, .action-btn i {
+  font-size: 1.15rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-view:hover i, .view-btn:hover i, .btn-info:hover i {
+  transform: scale(1.2) rotate(5deg);
+}
+
 .btn-icon {
   background: none;
   border: none;
@@ -492,6 +561,22 @@ body.dark-mode .badge-success { background: #064e3b; color: #6ee7b7; }
 body.dark-mode .badge-danger  { background: #7f1d1d; color: #fca5a5; }
 body.dark-mode .badge-gray    { background: #1f2937; color: #9ca3af; }
 body.dark-mode .badge-blue    { background: #1e3a5f; color: #93c5fd; }
+body.dark-mode .btn-view, body.dark-mode .view-btn, body.dark-mode .action-btn { 
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
+  color: #94a3b8; border-color: #475569; 
+}
+body.dark-mode .btn-view:hover, body.dark-mode .view-btn:hover, body.dark-mode .action-btn:hover { 
+  background: linear-gradient(135deg, #334155 0%, #475569 100%); 
+  color: #f8fafc; border-color: #64748b; 
+}
+body.dark-mode .btn-info { 
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); 
+  color: #6ee7b7; border-color: #10b981; 
+}
+body.dark-mode .btn-info:hover { 
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%); 
+  color: #a7f3d0; border-color: #34d399; 
+}
 /* --- RTL Support --- */
 [dir="rtl"] {
   --sidebar-width: 260px;

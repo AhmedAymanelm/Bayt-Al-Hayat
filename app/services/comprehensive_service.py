@@ -6,6 +6,7 @@ from ..models.astrology import AstrologyRequest
 from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
+from app.utils.settings_helper import get_env_or_db
 
 load_dotenv()
 
@@ -211,18 +212,19 @@ class ComprehensiveService:
 """
         
         try:
-            client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            openai_key = await get_env_or_db("openai_api_key")
+            db_model = await get_env_or_db("openai_model")
+            actual_model = db_model if db_model else model
+            
+            client = AsyncOpenAI(api_key=openai_key)
             
             response = await client.chat.completions.create(
-                model=model,
+                model=actual_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_tokens=2500,
-                temperature=temperature,
-                presence_penalty=0.3,
-                frequency_penalty=0.3
+                max_completion_tokens=2500
             )
             
             comprehensive_report = response.choices[0].message.content.strip()

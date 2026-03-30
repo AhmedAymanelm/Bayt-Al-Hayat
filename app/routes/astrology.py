@@ -153,6 +153,8 @@ async def generate_astrology_video_stream(
             
             video_result = await AIVideoService.generate_full_video(
                 result_dict,
+                neuro_pattern=request.neuro_pattern,
+                zodiac_sign=request.zodiac_sign or result_dict.get("sign"),
                 model=request.model,
                 voice=request.voice,
                 speed=request.speed,

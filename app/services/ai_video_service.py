@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
 from dotenv import load_dotenv
+from app.utils.settings_helper import get_env_or_db
+from app.database import async_session_maker
 
 load_dotenv(override=True)
 
@@ -36,63 +38,63 @@ class AIVideoService:
             "name_ar": "مفتاح الحياة (عنخ)",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325883/egyptian_symbols/kah1qprn6qgrzyrhgkxd.jpg",
             "video_prompts": [
-                "Cinematic shot. Soft {accent_color} light emerges from complete {bg_color} darkness, slowly gathering momentum. Particles of glowing energy swirl dynamically, building a sense of deep anticipation. {vibe_desc}.",
-                "Cinematic shot. The image animates to reveal a massive, glowing ancient Egyptian Ankh symbol standing gracefully at the center. Powerful rings of {accent_color} light pulse outward from the Ankh, filling the scene with immense life force and cosmic harmony. {vibe_desc}.",
-                "Cinematic shot. The Ankh slowly dissolves into pure {accent_color} stardust, leaving behind a tranquil, infinitely peaceful atmosphere that instills extreme psychological comfort. {vibe_desc}."
+                "Extreme cinematic wide shot. An infinite {bg_color} void stretches endlessly. From the absolute center, a single microscopic point of pure {accent_color} light ignites, then EXPLODES outward in a breathtaking slow-motion energy burst. Thousands of luminous particles spiral outward like a cosmic supernova, each trailing ribbons of {accent_color} fire. Volumetric god-rays pierce through swirling nebula clouds. Camera slowly pushes forward through the spectacle with hyper-realistic depth of field. Ultra photorealistic, IMAX quality. {vibe_desc}.",
+                "Sweeping cinematic orbital reveal. An ENORMOUS ancient Egyptian Ankh materializes from pure radiant energy — its surface living obsidian wrapped in pulsing {accent_color} plasma. Divine rings of light expand rhythmically across a {bg_color} cosmic ocean. Tens of thousands of glittering particles orbit the symbol like a galaxy forming. Sacred geometric patterns bloom around it. Golden lens flares cut dramatically across the frame. Deep cinematic bokeh, photorealistic, deeply emotional. {vibe_desc}.",
+                "Epic cinematic finale. The Ankh EXPLODES into a massive, reality-bending supernova of pure {accent_color} liquid light. The camera flies forward INTO the center of the explosion, passing through vibrant nebula clouds that form the user's zodiac constellation in the stars. The world is reborn in blinding brightness. Epic, triumphant, deep bass energy. {vibe_desc}."
             ]
         },
         "djed": {
             "name_ar": "عمود جد",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325013/egyptian_symbols/q7szwspoudjnxsnxiekr.jpg",
             "video_prompts": [
-                "Cinematic shot. The ground on a {bg_color} setting shakes softly. A glowing beam of {accent_color} light descends from above, anchoring firmly into the cinematic earth. {vibe_desc}.",
-                "Cinematic shot. The image animates to show a glowing ancient Egyptian Djed pillar slowly standing upright in the center. {accent_color} light lines ascend heavily around the pillar, radiating immense grounding power and stability. {vibe_desc}.",
-                "Cinematic shot. The Djed pillar merges into the ground, turning the entire surface into a solid, glowing {accent_color} foundation of absolute safety and calmness. {vibe_desc}."
+                "Cinematic low-angle ground-level shot. The {bg_color} earth trembles with deep resonant power. Enormous fissures crack open in slow motion, releasing blinding shafts of {accent_color} energy erupting upward like geysers of pure light. Clouds of crystalline dust catch and scatter the divine rays. Camera slowly cranes upward through the chaos. Photorealistic, IMAX scale, deeply grounding. {vibe_desc}.",
+                "Epic cinematic reveal. The earth parts to birth a colossal ancient Egyptian Djed pillar rising majestically. Its surface is ancient carved stone interlacd with channels of living {accent_color} energy flowing upward. Each horizontal band ignites sequentially sending shockwaves of light radiating outward. Volumetric fog swirls dramatically at the base. Camera circles slowly in reverent orbit. Sacred, powerful. {vibe_desc}.",
+                "Epic cinematic finale. The Djed Pillar reaches out with immense white-hot {accent_color} lightning, anchoring the entire universe. A massive circular shockwave ripples through the {bg_color} cosmos, turning every star into a glowing Egyptian hieroglyph of power. The camera orbits rapidly as the Djed becomes the central axis of a spinning galaxy. Supreme stability and god-like scale. {vibe_desc}."
             ]
         },
         "isis_knot": {
             "name_ar": "عقدة إيزيس",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325362/egyptian_symbols/bqxlwovjitmq8mwsgubs.jpg",
             "video_prompts": [
-                "Cinematic shot. Soft {accent_color} ribbons of ethereal energy flow elegantly across a {bg_color} background, tying themselves softly in the center. {vibe_desc}.",
-                "Cinematic shot. The image animates to form a rich glowing ancient Egyptian Isis Knot symbol. A gentle circular light halo appears in its heart, projecting pure protective emotional warmth. {vibe_desc}.",
-                "Cinematic shot. The Isis knot dissolves into a warm {accent_color} mist that gently envelops the screen like a comforting protective blanket. {vibe_desc}."
+                "Ethereal cinematic dolly shot. From edge to edge of an infinite {bg_color} dreamscape, luminous {accent_color} silk ribbons materialize from the void — hundreds of them, flowing in slow motion like auroras given physical form. They weave through each other hypnotically, each touch creating sparks of warm light. Camera glides forward through the ribbons, fabric softly catching diffracted light. Deeply beautiful, otherworldly. {vibe_desc}.",
+                "Breathtaking cinematic reveal. The ethereal ribbons converge and weave into a breathtaking ancient Egyptian Tyet Isis Knot — its form built of living light, warm {accent_color} and deep {bg_color} intertwined. A luminous halo pulses gently from its heart sending waves of protective energy outward. Intricate sacred geometric patterns bloom behind it like a divine mandala. Camera slowly pulls back to reveal its full cosmic scale. {vibe_desc}.",
+                "Epic cinematic finale. The Isis Knot weaves its ribbons into a massive, translucent protective cocoon of {accent_color} light that wraps the entire earth. A million glowing butterflies made of pure energy erupt from its center, filling the {bg_color} sky like a divine migration. The camera follows them toward a blinding, hopeful sunrise at the edge of the universe. Healing power at cosmic scale. {vibe_desc}."
             ]
         },
         "was_scepter": {
             "name_ar": "صولجان الواس",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325129/egyptian_symbols/tcblvoi4ydc0bnfdrahg.jpg",
             "video_prompts": [
-                "Cinematic shot. A powerful electric spark of {accent_color} light ignites in the center of a {bg_color} void, crackling with intense majestic energy. {vibe_desc}.",
-                "Cinematic shot. The image animates to show a majestic golden ancient Egyptian Was Scepter standing proudly. Pure {accent_color} magical energy ascends upward along the scepter from its forked base to its glowing head, radiating authority. {vibe_desc}.",
-                "Cinematic shot. The scepter releases a powerful energy pulse outwards, turning the screen into a brilliant {accent_color} glow before settling into empowering absolute calm. {vibe_desc}."
+                "Explosive cinematic power shot. In the heart of a {bg_color} void, a crack of {accent_color} lightning tears reality apart in slow motion — branching plasma fractals spread outward, each arc crackling with energy particles. The lightning implodes back to a single blinding point pulsing with contained power. Camera shakes subtly from the raw force. Ultra-detailed, hyper-real. {vibe_desc}.",
+                "Majestic cinematic crane-up reveal. The ancient Egyptian Was Scepter ERUPTS upward — towering, burnished {accent_color} metal carved with glowing hieroglyphs. Living electricity coils up its length from the forked base to the divine animal head leaving trails of plasma. Camera cranes up its full impossible length from earth to sky against a {bg_color} cosmic backdrop. God-rays frame it like a divine monument. Awe-inspiring. {vibe_desc}.",
+                "Epic cinematic finale. The Was Scepter strikes the invisible floor of space, sending a cataclysmic shockwave of {accent_color} energy that shatters reality itself into floating geometric glass shards. Behind the shattered reality, a glorious new {bg_color} universe is revealed, pulsing with ultimate authority and limitless potential. Camera rushes forward into the new dimension. God-like power. {vibe_desc}."
             ]
         },
         "scarab": {
             "name_ar": "الجعران",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325432/egyptian_symbols/lbedn0572f6rxhb7jf5d.jpg",
             "video_prompts": [
-                "Cinematic shot. Dense, rich {bg_color} sand slowly swirls and gathers in the center of the frame, infused with raw {accent_color} magical light. {vibe_desc}.",
-                "Cinematic shot. The image animates into a majestic ancient Egyptian Scarab beetle emerging from the cosmic sands. Its metallic wings unfurl slightly, glowing with {accent_color} light of rebirth and transformation. {vibe_desc}.",
-                "Cinematic shot. The scarab opens completely, releasing a blinding flash of {accent_color} light that wipes the screen into a pure, renewing dawn, instilling profound comfort and new beginnings. {vibe_desc}."
+                "Cinematic macro-to-wide tracking shot. An ocean of {bg_color} cosmic sand swirls in spectacular slow motion — each grain catches {accent_color} light like a miniature star. The swirling accelerates into a perfect spiral storm converging on a single glowing point. Camera moves through the spiraling storm impossibly close to the spinning grains before pulling wide to reveal its colossal galactic scale. {vibe_desc}.",
+                "Breathtaking cinematic emergence. The sand storm PARTS dramatically — an ancient Egyptian Scarab of extraordinary scale rises within. Its iridescent {accent_color} surface shifts between colors. As its magnificent wings unfurl they fill the entire frame — each membrane reveals sacred geometric light patterns and luminous star maps. The cosmic sand rains upward defying gravity. Camera orbits in slow reverence. {vibe_desc}.",
+                "Epic cinematic finale. The colossal Scarab beats its wings, tearing open a glowing {accent_color} wormhole in the fabric of space-time. It dives headfirst into the portal, dragging the camera along at hyper-speed through a tunnel of swirling stardust and sacred geometry. We emerge into a blindingly beautiful {bg_color} utopia full of floating golden pyramids. Breathtaking interstellar rebirth. {vibe_desc}."
             ]
         },
         "eye_of_horus": {
             "name_ar": "عين حورس",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325968/egyptian_symbols/hircpygiu1px1hhzul92.jpg",
             "video_prompts": [
-                "Cinematic shot. In a cosmic {bg_color} starfield, fine traces of {accent_color} celestial dust begin to spiral, drawing focus to the center. {vibe_desc}.",
-                "Cinematic shot. The image animates into a fiercely glowing ancient Egyptian Eye of Horus suspended in space. It pulses with sharp, crystalline {accent_color} energy, emitting beams of protective vision and clarity. {vibe_desc}.",
-                "Cinematic shot. The Eye of Horus flashes once, wrapping the entire scene in a protective {accent_color} light barrier that gently fades into absolute tranquility and perfect psychological safety. {vibe_desc}."
+                "Ultra-cinematic deep space push shot. An infinite {bg_color} starfield stretches in all directions. Camera begins a slow hypnotic pull-forward through the cosmos. Threads of {accent_color} celestial energy between distant stars become visible forming a vast invisible web. In the web's center, light begins to concentrate and twist into a spiral of cosmic dust. Anticipation builds with each frame. IMAX scale, ultra-detailed, majestic silence. {vibe_desc}.",
+                "Legendary cinematic reveal. The cosmic spiral resolves into an ancient Egyptian Eye of Horus of divine proportions suspended in deep space. Every line and curve composed of concentrated starlight and {accent_color} plasma. The pupil opens slowly revealing infinite depth within. BEAMS of focused {accent_color} light shoot outward across the cosmos. Waves of protective geometric light radiate outward. Camera holds in reverent close-up before pulling back to reveal its universal scale. {vibe_desc}.",
+                "Epic cinematic finale. The Eye of Horus suddenly shoots a colossal, blinding beam of {accent_color} laser-light directly at the camera, engulfing the viewer in pure, transcendent energy. As the light fades, the viewer is flying at warp speed through a magnificent {bg_color} galaxy shaped exactly like the Eye. Ultimate enlightenment and cosmic awakening. {vibe_desc}."
             ]
         },
         "lotus": {
             "name_ar": "زهرة اللوتس",
             "prompt_image": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774325681/egyptian_symbols/aduqhwyyb792zwwq0rap.jpg",
             "video_prompts": [
-                "Cinematic shot. A serene {bg_color} water-like energy surface ripples softly. Specks of {accent_color} light float upward towards the center. {vibe_desc}.",
-                "Cinematic shot. The image animates to reveal a breathtaking ancient Egyptian Lotus flower blooming gracefully from the energy water. Its petals glow with a soft, restorative {accent_color} light, radiating purity. {vibe_desc}.",
-                "Cinematic shot. The lotus dissolves into a shower of soft, glowing {accent_color} petals that gently fall across the screen, leaving a sensation of deep inner healing and peace. {vibe_desc}."
+                "Breathtaking underwater-to-surface cinematic shot. An infinite body of luminous {bg_color} water stretches in all directions — surface perfectly still and mirror-like reflecting the cosmos. Beneath the surface, slow-motion {accent_color} light pulses rise from infinite depths like heartbeats. Camera begins below the surface looking up at the shimmering boundary between water and sky. Individual droplets of light detach and float upward in perfect slow motion. Ethereal, healing. {vibe_desc}.",
+                "Magical cinematic reveal from below. Concentrated light erupts upward through the surface in a spectacular slow-motion crown splash of pure {accent_color} energy. A sacred ancient Egyptian Lotus flower blooms in real-time — each petal unfolding in divine slow motion, revealing bioluminescent patterns and sacred geometry within. Each petal edge radiates soft prismatic light. Camera slowly circles as the bloom reaches its full divine glory. {vibe_desc}.",
+                "Epic cinematic finale. The Lotus flower transcends, rapidly expanding until its glowing {accent_color} petals eclipse the entire sky. It detonates in a harmonious big bang of light, transforming the {bg_color} ocean into a brilliant galaxy of floating stars. The camera ascends at light-speed through the core of the galaxy, leaving a trail of pure creation. Cosmic climax. {vibe_desc}."
             ]
         }
     }
@@ -132,6 +134,65 @@ class AIVideoService:
         "vibe": "Calm, mystical, deeply introspective atmosphere."
     }
 
+    # ── Zodiac Sign → Cinematic Scene 1 (symbol materializes from void) ────────
+    ZODIAC_SCENE1_PROMPTS = {
+        # Arabic
+        "الحمل":    "Breathtaking IMAX cinematic shot. In a profound {bg_color} cosmic void, hyper-realistic glowing {accent_color} nebula clouds swirl and compress, slowly birthing the majestic, ethereal spirit of a Ram. Glowing stardust flows through its horns. No artificial lines, pure celestial particle physics. {vibe_desc}.",
+        "الثور":    "Breathtaking IMAX cinematic shot. From a rich, deep {bg_color} galaxy, massive waves of warm {accent_color} cosmic stardust gather in slow motion, forming the magnificent, grounded silhouette of a colossal Taurus Bull made entirely of living light. No drawn lines. {vibe_desc}.",
+        "الجوزاء":  "Breathtaking IMAX cinematic shot. Within an infinite {bg_color} universe, two brilliant streams of {accent_color} plasma dance around each other in an elegant double helix, resolving into the ethereal silhouettes of the celestial Twins. Ultra photorealistic, glowing aura. {vibe_desc}.",
+        "السرطان":  "Breathtaking IMAX cinematic shot. From a deep {bg_color} holographic cosmic ocean, a gigantic glorious silver moon rises. Ethereal {accent_color} nebula gases drift across its surface, naturally forming the majestic, living silhouette of a celestial Crab. Highly cinematic, no artificial lines. {vibe_desc}.",
+        "الأسد":    "Breathtaking IMAX cinematic shot. A supernova explodes in a {bg_color} abyss, radiating blinding {accent_color} volumetric light that shapes into the fierce, roaring spirit of a majestic cosmic Lion. Pure living fire and stardust, hyper-realistic depth of field. {vibe_desc}.",
+        "العذراء":  "Breathtaking IMAX cinematic shot. Delicate, shimmering {accent_color} auroras weave together across a serene {bg_color} starfield, slowly forming the graceful, angelic silhouette of the Virgo Maiden. Ethereal, hyper-detailed particle simulation. {vibe_desc}.",
+        "الميزان":  "Breathtaking IMAX cinematic shot. Perfect harmony in a {bg_color} cosmos as sweeping arcs of {accent_color} celestial light descend, perfectly balancing to form an awe-inspiring, glowing scale of justice made of pure stardust. Symmetrical, divine, photorealistic. {vibe_desc}.",
+        "العقرب":   "Breathtaking IMAX cinematic shot. From a mysterious, magnetic {bg_color} dark matter cloud, intense {accent_color} energy pulses shape the towering, fierce silhouette of a cosmic Scorpion. Its tail curves with dangerous glowing plasma. Ultra-cinematic, deep shadow. {vibe_desc}.",
+        "القوس":    "Breathtaking IMAX cinematic shot. A blinding {accent_color} shooting star tears through a {bg_color} galaxy, its luminous trail dynamically swirling into the majestic form of a celestial Archer pulling a bow of pure light. Epic momentum, star-birth physics. {vibe_desc}.",
+        "الجدي":    "Breathtaking IMAX cinematic shot. Massive, ancient {accent_color} crystalline light erupts from a cosmic {bg_color} mountain range, sculpting the mighty Sea-Goat out of living diamond stardust. Unshakable, enduring power, hyper-realistic cosmic scales. {vibe_desc}.",
+        "الدلو":    "Breathtaking IMAX cinematic shot. Advanced, glowing {accent_color} quantum liquid pours continuously across a {bg_color} infinite galaxy, forming the vast silhouette of the Water-Bearer. The liquid light transforms into a billion new stars. Highly futuristic. {vibe_desc}.",
+        "الحوت":    "Breathtaking IMAX cinematic shot. In a tranquil {bg_color} cosmic ocean, two magnificent ethereal fishes made of flowing, luminescent {accent_color} stardust swim in an eternal circle. Trailing auroras of light follow them. Profoundly peaceful, photorealistic. {vibe_desc}.",
+        
+        # English fallback
+        "Aries":       "Breathtaking IMAX cinematic shot. In a profound {bg_color} cosmic void, hyper-realistic glowing {accent_color} nebula clouds swirl and compress, slowly birthing the majestic, ethereal spirit of a Ram. Glowing stardust flows through its horns. No artificial lines, pure celestial particle physics. {vibe_desc}.",
+        "Taurus":      "Breathtaking IMAX cinematic shot. From a rich, deep {bg_color} galaxy, massive waves of warm {accent_color} cosmic stardust gather in slow motion, forming the magnificent, grounded silhouette of a colossal Taurus Bull made entirely of living light. No drawn lines. {vibe_desc}.",
+        "Gemini":      "Breathtaking IMAX cinematic shot. Within an infinite {bg_color} universe, two brilliant streams of {accent_color} plasma dance around each other in an elegant double helix, resolving into the ethereal silhouettes of the celestial Twins. Ultra photorealistic, glowing aura. {vibe_desc}.",
+        "Cancer":      "Breathtaking IMAX cinematic shot. From a deep {bg_color} holographic cosmic ocean, a gigantic glorious silver moon rises. Ethereal {accent_color} nebula gases drift across its surface, naturally forming the majestic, living silhouette of a celestial Crab. Highly cinematic, no artificial lines. {vibe_desc}.",
+        "Leo":         "Breathtaking IMAX cinematic shot. A supernova explodes in a {bg_color} abyss, radiating blinding {accent_color} volumetric light that shapes into the fierce, roaring spirit of a majestic cosmic Lion. Pure living fire and stardust, hyper-realistic depth of field. {vibe_desc}.",
+        "Virgo":       "Breathtaking IMAX cinematic shot. Delicate, shimmering {accent_color} auroras weave together across a serene {bg_color} starfield, slowly forming the graceful, angelic silhouette of the Virgo Maiden. Ethereal, hyper-detailed particle simulation. {vibe_desc}.",
+        "Libra":       "Breathtaking IMAX cinematic shot. Perfect harmony in a {bg_color} cosmos as sweeping arcs of {accent_color} celestial light descend, perfectly balancing to form an awe-inspiring, glowing scale of justice made of pure stardust. Symmetrical, divine, photorealistic. {vibe_desc}.",
+        "Scorpio":     "Breathtaking IMAX cinematic shot. From a mysterious, magnetic {bg_color} dark matter cloud, intense {accent_color} energy pulses shape the towering, fierce silhouette of a cosmic Scorpion. Its tail curves with dangerous glowing plasma. Ultra-cinematic, deep shadow. {vibe_desc}.",
+        "Sagittarius": "Breathtaking IMAX cinematic shot. A blinding {accent_color} shooting star tears through a {bg_color} galaxy, its luminous trail dynamically swirling into the majestic form of a celestial Archer pulling a bow of pure light. Epic momentum, star-birth physics. {vibe_desc}.",
+        "Capricorn":   "Breathtaking IMAX cinematic shot. Massive, ancient {accent_color} crystalline light erupts from a cosmic {bg_color} mountain range, sculpting the mighty Sea-Goat out of living diamond stardust. Unshakable, enduring power, hyper-realistic cosmic scales. {vibe_desc}.",
+        "Aquarius":    "Breathtaking IMAX cinematic shot. Advanced, glowing {accent_color} quantum liquid pours continuously across a {bg_color} infinite galaxy, forming the vast silhouette of the Water-Bearer. The liquid light transforms into a billion new stars. Highly futuristic. {vibe_desc}.",
+        "Pisces":      "Breathtaking IMAX cinematic shot. In a tranquil {bg_color} cosmic ocean, two magnificent ethereal fishes made of flowing, luminescent {accent_color} stardust swim in an eternal circle. Trailing auroras of light follow them. Profoundly peaceful, photorealistic. {vibe_desc}.",
+    }
+    
+    # ── You can paste direct image URLs (Cloudinary, Imgur) here to force Runway to animate them (Image-to-Video) ──
+    ZODIAC_IMAGES_REF = {
+        "الحمل": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843836/zodiac_images_refs/krr9oddbpcatnlelruaw.png", 
+        "الثور": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843863/zodiac_images_refs/xwyqeebcu5sxgihrg2c7.png", 
+        "الجوزاء": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843947/zodiac_images_refs/wxuhxox4tynbd6mida8m.png", 
+        "السرطان": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843749/zodiac_images_refs/gxzz5wtcu47qhe3svxbg.png", 
+        "الأسد": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844025/zodiac_images_refs/jwjlfzf2lxq320dmzr4t.png", 
+        "العذراء": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844268/zodiac_images_refs/phwba61lrthkgnjt0znc.png", 
+        "الميزان": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844314/zodiac_images_refs/rrw2duyspxjkpqhk67p4.png", 
+        "العقرب": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844368/zodiac_images_refs/uwq0z9xgla7dzjibkljk.png", 
+        "القوس": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844420/zodiac_images_refs/rbmzrxxtkpxazpdykwlc.png", 
+        "الجدي": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844465/zodiac_images_refs/aym10meu4hihvvvzbpul.png", 
+        "الدلو": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844541/zodiac_images_refs/uuvb8ewex6dlw6jfrnqb.png", 
+        "الحوت": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844579/zodiac_images_refs/p2emtfj9e6ibbyzok09r.png",
+        "Aries": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843836/zodiac_images_refs/krr9oddbpcatnlelruaw.png", 
+        "Taurus": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843863/zodiac_images_refs/xwyqeebcu5sxgihrg2c7.png", 
+        "Gemini": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843947/zodiac_images_refs/wxuhxox4tynbd6mida8m.png", 
+        "Cancer": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843749/zodiac_images_refs/gxzz5wtcu47qhe3svxbg.png", 
+        "Leo": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844025/zodiac_images_refs/jwjlfzf2lxq320dmzr4t.png", 
+        "Virgo": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844268/zodiac_images_refs/phwba61lrthkgnjt0znc.png", 
+        "Libra": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844314/zodiac_images_refs/rrw2duyspxjkpqhk67p4.png", 
+        "Scorpio": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844368/zodiac_images_refs/uwq0z9xgla7dzjibkljk.png", 
+        "Sagittarius": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844420/zodiac_images_refs/rbmzrxxtkpxazpdykwlc.png", 
+        "Capricorn": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844465/zodiac_images_refs/aym10meu4hihvvvzbpul.png", 
+        "Aquarius": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844541/zodiac_images_refs/uuvb8ewex6dlw6jfrnqb.png", 
+        "Pisces": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844579/zodiac_images_refs/p2emtfj9e6ibbyzok09r.png"
+    }
+
     @classmethod
     def _reload_env(cls):
         load_dotenv(override=True)
@@ -159,17 +220,18 @@ class AIVideoService:
         """Helper to generate and poll a single video clip concurrently."""
         print(f"🎥 [Scene {scene_idx}] Generating cinematic animation...")
         
-        # Use image-to-video ONLY for the core symbol scene (Scene 2) if an image is provided
-        if prompt_image and scene_idx == 2:
-            print(f"🖼️ [Scene {scene_idx}] Using Image Reference for accuracy.")
+        # Use image-to-video if a valid image reference URL is provided
+        if prompt_image and len(prompt_image.strip()) > 10:
+            print(f"🖼️ [Scene {scene_idx}] Using Image Reference for accuracy: {prompt_image[:30]}...")
             task = await client.image_to_video.create(
                 model=model,
-                prompt_image=prompt_image,
+                prompt_image=prompt_image.strip(),
                 prompt_text=prompt_text,
                 ratio="1280:720",
                 duration=10
             )
         else:
+            print(f"📝 [Scene {scene_idx}] Using Text-to-Video mode.")
             task = await client.text_to_video.create(
                 model=model,
                 prompt_text=prompt_text,
@@ -186,8 +248,8 @@ class AIVideoService:
                 elif isinstance(out, dict):
                     return out.get("video")
                 return str(out)
-            elif task.status in ["FAILED", "CANCELLED"]:
-                err = getattr(task, "error", "Unknown error")
+            elif task.status in ["FAILED", "CANCELLED", "THROTTLED"]:
+                err = getattr(task, "error", f"Unknown error (Status: {task.status})")
                 raise Exception(f"Runway Task Failed [Scene {scene_idx}]: {err}")
             
             await asyncio.sleep(5)
@@ -201,6 +263,65 @@ class AIVideoService:
             return path
 
     @classmethod
+    async def _get_cached_video(cls, zodiac_sign: str, neuro_pattern: str) -> Optional[Dict[str, Any]]:
+        """Check DB for a pre-generated video matching this (zodiac, neuro) combo."""
+        from app.models.video_cache import VideoCache
+        from sqlalchemy.future import select
+        from sqlalchemy import update
+
+        cache_zodiac = zodiac_sign or "default"
+        cache_neuro = neuro_pattern or "default"
+
+        async with async_session_maker() as session:
+            result = await session.execute(
+                select(VideoCache).where(
+                    VideoCache.zodiac_sign == cache_zodiac,
+                    VideoCache.neuro_pattern == cache_neuro
+                )
+            )
+            cached = result.scalar_one_or_none()
+            if cached:
+                # Increment hit counter
+                cached.hit_count += 1
+                cached.last_used_at = datetime.utcnow()
+                await session.commit()
+                print(f"⚡ Cache HIT: {cache_zodiac}+{cache_neuro} (used {cached.hit_count} times)")
+                return {
+                    "status": "success",
+                    "video_url": cached.video_url,
+                    "video_path": None,
+                    "session_dir": "cached",
+                    "metadata": {
+                        "symbol_key": cached.symbol_key,
+                        "symbol_name_ar": cls.SYMBOLS.get(cached.symbol_key, {}).get("name_ar", ""),
+                        "neuro_pattern": neuro_pattern,
+                        "zodiac_sign": zodiac_sign,
+                        "cache_hit": True,
+                        "hit_count": cached.hit_count
+                    },
+                    "message": f"فيديو جاهز من الذاكرة الذكية ⚡ (استُخدم {cached.hit_count} مرة)"
+                }
+        return None
+
+    @classmethod
+    async def _save_video_to_cache(cls, zodiac_sign: str, neuro_pattern: str, symbol_key: str, video_url: str):
+        """Save a newly generated video URL to the cache DB."""
+        from app.models.video_cache import VideoCache
+        cache_zodiac = zodiac_sign or "default"
+        cache_neuro = neuro_pattern or "default"
+        async with async_session_maker() as session:
+            entry = VideoCache(
+                zodiac_sign=cache_zodiac,
+                neuro_pattern=cache_neuro,
+                symbol_key=symbol_key,
+                video_url=video_url,
+                hit_count=1
+            )
+            session.add(entry)
+            await session.commit()
+            print(f"💾 Cache SAVED: {cache_zodiac}+{cache_neuro} → {video_url[:60]}...")
+
+    @classmethod
     async def generate_full_video(
         cls,
         assessment_data: Dict[str, Any],
@@ -208,12 +329,20 @@ class AIVideoService:
         neuro_pattern: Optional[str] = None,
         zodiac_sign: Optional[str] = None,
         avatar: str = "",
-        model: str = "gen4.5", # Default to gen4.5 but using 5s duration clips
+        model: str = "gen4.5",
         include_video: bool = True,
         **kwargs
     ) -> Dict[str, Any]:
 
         print("🎬 Starting Multi-Scene AI Video Generation...")
+
+        # ── 1. CHECK CACHE FIRST ─────────────────────────────────────────────
+        if include_video:
+            cached = await cls._get_cached_video(zodiac_sign, neuro_pattern)
+            if cached:
+                return cached
+            print("🔍 Cache MISS – generating new video...")
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         session_dir = Path(output_dir) / timestamp
         session_dir.mkdir(parents=True, exist_ok=True)
@@ -235,6 +364,18 @@ class AIVideoService:
                 ) for pt in symbol_data["video_prompts"]
             ]
 
+            # ── Override Scene 1 with zodiac-specific constellation intro ──────
+            zodiac_scene1 = cls.ZODIAC_SCENE1_PROMPTS.get(zodiac_sign)
+            if zodiac_scene1:
+                formatted_prompts[0] = zodiac_scene1.format(
+                    bg_color=color_data["bg"],
+                    accent_color=color_data["accent"],
+                    vibe_desc=color_data["vibe"]
+                )
+                print(f"✨ [Scene 1] Zodiac-specific intro: {zodiac_sign}")
+            else:
+                print(f"⚠️ [Scene 1] No zodiac override found for '{zodiac_sign}', using default symbol intro.")
+
             (session_dir / "script.txt").write_text(
                 f"Symbol: {symbol_data['name_ar']}\nPrompts:\n" + "\n".join(formatted_prompts),
                 encoding="utf-8"
@@ -244,20 +385,30 @@ class AIVideoService:
             final_video_path = None
 
             if include_video:
-                runway_key = os.getenv("RUNWAYML_API_SECRET")
+                runway_key = await get_env_or_db("runway_api_key", "RUNWAYML_API_SECRET")
                 if not runway_key:
-                    raise Exception("RUNWAYML_API_SECRET missing in environment variables")
+                    raise Exception("RunwayML Key missing in configuration")
 
                 from runwayml import AsyncRunwayML
                 client = AsyncRunwayML(api_key=runway_key)
                 
-                # 1. Start generation of all 3 clips concurrently
-                print("🚀 Launching 3 Runway concurrent tasks...")
-                tasks = [
-                    cls._generate_single_clip(client, prompt, i+1, model, symbol_data.get("prompt_image"))
-                    for i, prompt in enumerate(formatted_prompts)
-                ]
-                clip_urls = await asyncio.gather(*tasks)
+                # 1. Start generation of all 3 clips sequentially
+                print("🚀 Launching 3 Runway sequential tasks to avoid rate limits...")
+                clip_urls = []
+                for i, prompt in enumerate(formatted_prompts):
+                    # Determine Which Image to Use Based on Scene
+                    scene_img = None
+                    if i == 0:   # Scene 1: Zodiac Sign
+                        scene_img = cls.ZODIAC_IMAGES_REF.get(zodiac_sign, "")
+                    elif i == 1: # Scene 2: Egyptian Neuroscience Symbol
+                        scene_img = symbol_data.get("prompt_image", "")
+                        
+                    url = await cls._generate_single_clip(client, prompt, i+1, model, scene_img)
+                    clip_urls.append(url)
+                    # optional delay if needed, but sequential is usually enough
+                    if i < len(formatted_prompts) - 1:
+                        await asyncio.sleep(2)
+                
                 print(f"✅ All 3 clips gathered: {clip_urls}")
 
                 # 2. Download the clips concurrently
@@ -296,9 +447,9 @@ class AIVideoService:
                 # Cloudinary Upload to save local server space
                 print("☁️ Uploading final video to Cloudinary...")
                 cloudinary.config(
-                    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-                    api_key=os.getenv("CLOUDINARY_API_KEY"),
-                    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+                    cloud_name=await get_env_or_db("cloudinary_cloud_name"),
+                    api_key=await get_env_or_db("cloudinary_api_key"),
+                    api_secret=await get_env_or_db("cloudinary_api_secret", "CLOUDINARY_API_SECRET")
                 )
                 
                 # Run synchronous upload in thread to not block async loop
@@ -310,6 +461,9 @@ class AIVideoService:
                 )
                 video_url = upload_res["secure_url"]
                 print(f"✅ Uploaded successfully: {video_url}")
+
+                # Save to DB cache for future users
+                await cls._save_video_to_cache(zodiac_sign, neuro_pattern, symbol_key, video_url)
 
                 # Clean up local storage
                 print("🧹 Deleting local video segments to free space...")
@@ -325,6 +479,7 @@ class AIVideoService:
                     "symbol_name_ar": symbol_data["name_ar"],
                     "neuro_pattern": neuro_pattern,
                     "zodiac_sign": zodiac_sign,
+                    "cache_hit": False,
                 },
                 "message": "30-second multi-scene video generated successfully"
             }

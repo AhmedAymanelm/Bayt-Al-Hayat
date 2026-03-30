@@ -35,30 +35,30 @@ async def _send_email(to_email: str, subject: str, html_content: str):
         print(f"Email sent successfully to {to_email}")
 
 
-async def send_verification_email(email_to: str, token: str):
-    html = f"""
-    <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; padding: 20px;">
-        <h2>تأكيد حساب بيت الحياة</h2>
-        <p>مرحباً بك! لتأكيد حسابك، انسخ الكود التالي:</p>
-        <div style="background: #f4f4f4; padding: 15px; margin: 20px 0; border-radius: 5px; word-break: break-all; text-align: left;" dir="ltr">
-            <strong>{token}</strong>
-        </div>
-        <p>هذا الكود صالح لمدة 24 ساعة.</p>
-    </div>
-    """
-    await _send_email(email_to, "تأكيد حسابك - بيت الحياة", html)
-
-
 async def send_reset_password_email(email_to: str, token: str):
     html = f"""
-    <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right; padding: 20px;">
-        <h2>إعادة تعيين كلمة المرور</h2>
-        <p>لقد طلبت إعادة تعيين كلمة المرور الخاصة بك. يرجى استخدام الكود التالي:</p>
-        <div style="background: #f4f4f4; padding: 15px; margin: 20px 0; border-radius: 5px; word-break: break-all; text-align: left;" dir="ltr">
-            <strong>{token}</strong>
+    <div dir="rtl" style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f9f9f9; padding: 40px 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">بيت الحياة</h1>
+            </div>
+            <div style="padding: 40px 30px; text-align: center;">
+                <h2 style="color: #333333; margin-top: 0; margin-bottom: 20px; font-size: 22px;">إعادة تعيين كلمة المرور</h2>
+                <p style="color: #666666; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                    لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.<br>يرجى استخدام الكود أدناه لإتمام هذه العملية:
+                </p>
+                <div style="background-color: #f8fafc; border: 2px dashed #cbd5e0; border-radius: 8px; padding: 20px; margin: 0 auto 30px; display: inline-block;">
+                    <span style="font-family: monospace; font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 5px;" dir="ltr">{token}</span>
+                </div>
+                <p style="color: #888888; font-size: 14px; line-height: 1.5; margin-bottom: 0;">
+                    هذا الكود صالح لمدة 15 دقيقة فقط.<br>
+                    إذا لم تقم بهذا الطلب، يمكنك تجاهل هذه الرسالة بأمان.
+                </p>
+            </div>
+            <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-top: 1px solid #edf2f7;">
+                <p style="color: #a0aec0; font-size: 12px; margin: 0;">&copy; بيت الحياة. جميع الحقوق محفوظة.</p>
+            </div>
         </div>
-        <p>هذا الكود صالح لمدة 15 دقيقة.</p>
-        <p>إذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة.</p>
     </div>
     """
     await _send_email(email_to, "إعادة تعيين كلمة المرور - بيت الحياة", html)

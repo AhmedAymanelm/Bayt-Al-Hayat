@@ -505,18 +505,18 @@ async def get_system_health(
 
     keys_to_check = [
         ("OPENAI_API_KEY", "OpenAI"),
-        ("STABILITY_API_KEY", "Stability AI"),
-        ("D_ID_API_KEY", "D-ID"),
         ("DATABASE_URL", "Database"),
         ("SECRET_KEY", "JWT Secret"),
         ("CLOUDINARY_CLOUD_NAME", "Cloudinary"),
+        ("ASTROLOGY_API_KEY", "Astrology API"),
+        ("OPENAI_MODEL", "OpenAI Model")
     ]
 
     health_status = {}
     all_ok = True
     for env_key, label in keys_to_check:
         val = os.getenv(env_key)
-        configured = bool(val and len(val) > 5)
+        configured = bool(val and len(val) > 3)
         if not configured:
             all_ok = False
         health_status[label] = {
@@ -746,20 +746,17 @@ async def test_model_setting(
                 res.raise_for_status()
             return {"message": "OpenAI connection successful"}
 
-        elif key == "stability_api_key":
-            async with httpx.AsyncClient(timeout=5) as client:
-                res = await client.get("https://api.stability.ai/v1/engines/list", headers={"Authorization": f"Bearer {val}"})
+        elif key == "astrology_api_key":
+            payload = {
+                "year": 2000, "month": 1, "date": 1,
+                "hours": 12, "minutes": 0, "seconds": 0,
+                "latitude": 30.0, "longitude": 31.0, "timezone": 2.0,
+                "config": {"observation_point": "topocentric", "ayanamsha": "tropical", "language": "en"}
+            }
+            async with httpx.AsyncClient(timeout=10) as client:
+                res = await client.post("https://json.freeastrologyapi.com/western/planets", headers={"x-api-key": val}, json=payload)
                 res.raise_for_status()
-            return {"message": "Stability AI connection successful"}
-
-        elif key == "d_id_api_key":
-            # D-ID uses basic auth, key is usually "username:password"
-            # However some endpoints just accept basic auth with the full API key string if formatted correctly
-            auth_header = f"Basic {__import__('base64').b64encode(val.encode()).decode()}" if ":" in val else f"Bearer {val}"
-            async with httpx.AsyncClient(timeout=5) as client:
-                res = await client.get("https://api.d-id.com/credits", headers={"Authorization": auth_header})
-                res.raise_for_status()
-            return {"message": "D-ID connection successful"}
+            return {"message": "Astrology API connection successful"}
 
         elif "key" in key or "secret" in key:
             if len(val) > 8:
@@ -775,6 +772,74 @@ async def test_model_setting(
         raise HTTPException(status_code=500, detail=f"Network error testing key: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Test failed: {str(e)}")
+
+@router.get("/settings/models/balances", summary="Get remaining balance/tokens for AI models")
+async def get_ai_models_balances(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    import httpx
+    import os
+    import base64
+    result = await db.execute(
+        select(SystemSetting).where(SystemSetting.group == "ai_models")
+    )
+    rows = result.scalars().all()
+    settings_dict = {r.key: r.value or os.getenv(r.key.upper(), "") for r in rows}
+
+    balances = []
+
+    def add_bal(service, balance, status):
+        balances.append({"service": service, "balance": balance, "status": status})
+
+    # OpenAI
+    openai_key = settings_dict.get("openai_api_key")
+    if openai_key:
+        add_bal("OpenAI", "Check Dashboard", "warning")
+    else:
+        add_bal("OpenAI", "Not Configured", "error")
+
+    # RunwayML
+    runway_key = settings_dict.get("runway_api_key")
+    if runway_key:
+        add_bal("RunwayML", "Check Dashboard", "warning")
+    else:
+            add_bal("RunwayML", "Not Configured", "error")
+
+    # Astrology API
+    astro_key = settings_dict.get("astrology_api_key")
+    if astro_key:
+        add_bal("Astrology API", "Active (Free Tier)", "ok")
+    else:
+        add_bal("Astrology API", "Not Configured", "error")
+
+    # Cloudinary
+    cloud_name = settings_dict.get("cloudinary_cloud_name")
+    cloud_key = settings_dict.get("cloudinary_api_key")
+    cloud_secret = settings_dict.get("cloudinary_api_secret")
+    if cloud_name and cloud_key and cloud_secret:
+        try:
+            auth_header = f"Basic {base64.b64encode(f'{cloud_key}:{cloud_secret}'.encode()).decode()}"
+            async with httpx.AsyncClient(timeout=5) as client:
+                res = await client.get(f"https://api.cloudinary.com/v1_1/{cloud_name}/usage", headers={"Authorization": auth_header})
+                if res.status_code == 200:
+                    data = res.json()
+                    credits_usage = data.get("credits", {}).get("usage", 0)
+                    credits_limit = data.get("credits", {}).get("limit", 0)
+                    if credits_limit:
+                        pct = round((credits_usage / credits_limit) * 100, 1)
+                        add_bal("Cloudinary", f"{pct}% Used", "ok" if pct < 90 else "warning")
+                    else:
+                        add_bal("Cloudinary", f"{credits_usage} utilized", "ok")
+                else:
+                    add_bal("Cloudinary", "Check Dashboard", "warning")
+        except Exception:
+            add_bal("Cloudinary", "Connection Failed", "error")
+    else:
+        add_bal("Cloudinary", "Not Fully Configured", "error")
+
+    return balances
+
 
 
 # ─── Settings: Payment Gateways ────────────────────────────────────────────────

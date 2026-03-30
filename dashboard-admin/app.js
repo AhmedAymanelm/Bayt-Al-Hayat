@@ -130,6 +130,10 @@ async function loadDashboard() {
     const stats = await statsRes.json();
     const growth = await growthRes.json();
 
+    if (document.getElementById('aiBalancesContainer')) {
+      loadAiBalances();
+    }
+
     // Update KPI Cards
     const cards = document.querySelectorAll('.kpi-card h3');
     if (cards.length >= 6) {
@@ -285,5 +289,54 @@ function initCharts(stats, growth) {
       journeyContainer.style.display = 'block';
       journeyContainer.innerHTML = html;
     }
+  }
+}
+
+// ─── AI Models Balances ────────────────────────────────────────────────────────
+async function loadAiBalances() {
+  const container = document.getElementById('aiBalancesContainer');
+  if (!container) return;
+  try {
+    const res = await apiFetch('/admin/settings/models/balances');
+    if (!res) return;
+    const balances = await res.json();
+    
+    if (!balances || balances.length === 0) {
+      container.innerHTML = '<div style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">No AI models configured.</div>';
+      return;
+    }
+
+    const icons = {
+      'OpenAI': 'bx-message-square-dots',
+      'RunwayML': 'bx-film',
+      'Cloudinary': 'bx-cloud-upload',
+      'Astrology API': 'bx-planet'
+    };
+
+    container.innerHTML = balances.map(b => {
+      const icon = icons[b.service] || 'bx-brain';
+      const statusColor = b.status === 'ok' ? '#10b981' : (b.status === 'warning' ? '#f59e0b' : '#ef4444');
+      const bgMap = {
+        'ok': 'rgba(16, 185, 129, 0.1)',
+        'warning': 'rgba(245, 158, 11, 0.1)',
+        'error': 'rgba(239, 68, 68, 0.1)'
+      };
+      const bg = bgMap[b.status] || 'rgba(100,100,100,0.1)';
+
+      return `
+        <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; background: var(--bg-body);">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: ${bg}; color: ${statusColor}; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+            <i class='bx ${icon}'></i>
+          </div>
+          <div style="flex: 1; overflow: hidden;">
+            <h4 style="margin: 0 0 0.25rem 0; font-size: 0.9rem; color: var(--text-main); font-weight: 600;">${b.service}</h4>
+            <p style="margin: 0; font-size: 0.8rem; color: ${statusColor}; font-weight: 700; line-height: 1.3; overflow-wrap: break-word;" title="${b.balance}">${b.balance}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (err) {
+    container.innerHTML = '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Failed to load AI balances.</div>';
   }
 }

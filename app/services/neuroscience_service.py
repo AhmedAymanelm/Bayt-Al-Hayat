@@ -164,8 +164,9 @@ class NeuroscienceService:
     
     @classmethod
     def _count_answers(cls, answers: List[str]) -> Dict[str, int]:
-        """Count occurrences of each answer"""
-        counts = Counter(answers)
+        """Count occurrences of each answer (case-insensitive)"""
+        upper_answers = [str(a).upper() for a in answers]
+        counts = Counter(upper_answers)
         return {
             "A": counts.get("A", 0),
             "B": counts.get("B", 0),
