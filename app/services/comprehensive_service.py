@@ -23,7 +23,7 @@ class ComprehensiveService:
         birth_date: str,
         day_type: str = "today",
         birth_time: str = None,
-        birth_place: str = None,
+        city_of_birth: str = None,
         latitude: float = None,
         longitude: float = None
     ) -> Dict[str, Any]:
@@ -37,7 +37,7 @@ class ComprehensiveService:
             birth_date=birth_date,
             day_type=day_type,
             birth_time=birth_time,
-            birth_location=birth_place or "",
+            birth_location=city_of_birth or "",
             latitude=latitude,
             longitude=longitude
         )

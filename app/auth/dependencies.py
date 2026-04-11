@@ -52,24 +52,4 @@ async def get_current_user(
     return user
 
 
-async def get_reset_password_email(
-    token: str = Depends(OAuth2PasswordBearer(tokenUrl="auth/verify-reset-code"))
-) -> str:
-    try:
-        payload = decode_token(token)
-        email: str = payload.get("sub")
-        token_type = payload.get("type")
-        
-        if email is None or token_type != "reset":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="رمز إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return email
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="رمز إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+

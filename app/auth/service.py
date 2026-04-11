@@ -12,7 +12,6 @@ from app.auth.utils import (
     verify_password,
     create_access_token,
     create_refresh_token,
-    create_reset_token,
     create_verification_code,
     decode_token,
 )
@@ -36,7 +35,7 @@ async def register_user(user_data: UserRegisterRequest, background_tasks: Backgr
         hashed_password=hash_password(user_data.password),
         fullname=user_data.fullname,
         date_of_birth=user_data.date_of_birth,
-        place_of_birth=user_data.place_of_birth,
+        city_of_birth=user_data.city_of_birth,
         time_of_birth=user_data.time_of_birth,
         profile_picture_url=user_data.profile_picture_url,
         is_verified=True,
@@ -127,6 +126,24 @@ async def forget_password(data: ForgetPasswordRequest, background_tasks: Backgro
 
 
 async def verify_reset_code(data: VerifyResetCodeRequest, db: AsyncSession) -> dict:
+    # Find user by code
+    result = await db.execute(select(User).where(User.verification_code == data.verification_code))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        return {"is_valid": False, "message": "رمز التحقق غير صحيح"}
+        
+    # Check if code has expired
+    if not user.verification_code_expires_at or user.verification_code_expires_at < datetime.utcnow():
+        return {"is_valid": False, "message": "انتهت صلاحية رمز التحقق"}
+
+    return {
+        "is_valid": True,
+        "message": "الرمز صحيح"
+    }
+
+
+async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> dict:
     # Find user
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
@@ -136,8 +153,8 @@ async def verify_reset_code(data: VerifyResetCodeRequest, db: AsyncSession) -> d
             status_code=status.HTTP_404_NOT_FOUND,
             detail="المستخدم غير موجود"
         )
-        
-    # Verify the 6-digit code
+
+    # Verify the code
     if user.verification_code != data.verification_code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -149,26 +166,6 @@ async def verify_reset_code(data: VerifyResetCodeRequest, db: AsyncSession) -> d
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="انتهت صلاحية رمز التحقق"
-        )
-
-    # Generate persistent reset token (valid for 15 mins)
-    reset_token = create_reset_token(user.email)
-
-    return {
-        "reset_token": reset_token,
-        "message": "تم التحقق من الرمز بنجاح. يمكنك الآن تعيين كلمة مرور جديدة."
-    }
-
-
-async def reset_password(data: ResetPasswordRequest, email: str, db: AsyncSession) -> dict:
-    # Find user
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="المستخدم غير موجود"
         )
 
     # Update password and clear code

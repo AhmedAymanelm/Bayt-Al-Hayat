@@ -18,7 +18,7 @@ class QuestionnaireResponse(BaseModel):
 
 class AnswersSubmission(BaseModel):
     """Answers submission model"""
-    answers: List[int] = Field(..., min_length=7, max_length=7)
+    answers: List[int] = Field(..., min_length=1)
     
     @field_validator('answers')
     @classmethod

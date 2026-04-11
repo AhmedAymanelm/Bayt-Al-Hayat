@@ -1,11 +1,14 @@
 from typing import List, Dict, Tuple
 from collections import Counter
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from ..models.neuroscience import (
     NeuroscienceQuestion,
     NeuroscienceQuestionnaireResponse,
     NeuroscienceScores,
     NeuroscienceAssessmentResult
 )
+from ..models.question import AssessmentQuestion
 
 
 class NeuroscienceService:
@@ -49,6 +52,7 @@ class NeuroscienceService:
         )
     }
     
+    # ── Fallback questions (used if DB has none) ─────────────────────────
     QUESTIONS = [
         {
             "id": 1,
@@ -152,8 +156,41 @@ class NeuroscienceService:
     ]
     
     @classmethod
+    async def get_questionnaire_from_db(cls, db: AsyncSession) -> NeuroscienceQuestionnaireResponse:
+        """Return questionnaire with questions from database"""
+        result = await db.execute(
+            select(AssessmentQuestion)
+            .where(
+                AssessmentQuestion.assessment_type == "neuroscience",
+                AssessmentQuestion.is_active == True
+            )
+            .order_by(AssessmentQuestion.order_index)
+        )
+        db_questions = result.scalars().all()
+        
+        if db_questions:
+            questions = [
+                NeuroscienceQuestion(
+                    id=q.id,
+                    text=q.text,
+                    options=q.options,
+                    options_text=q.options_text or {}
+                )
+                for q in db_questions
+            ]
+        else:
+            # Fallback to hardcoded questions
+            questions = [NeuroscienceQuestion(**q) for q in cls.QUESTIONS]
+        
+        return NeuroscienceQuestionnaireResponse(
+            title="تقييم الجهاز العصبي",
+            description="اختر الإجابة الأقرب لحالتك الآن",
+            questions=questions
+        )
+    
+    @classmethod
     def get_questionnaire(cls) -> NeuroscienceQuestionnaireResponse:
-        """Return complete questionnaire with all questions"""
+        """Return complete questionnaire with all questions (fallback/sync)"""
         questions = [NeuroscienceQuestion(**q) for q in cls.QUESTIONS]
         
         return NeuroscienceQuestionnaireResponse(

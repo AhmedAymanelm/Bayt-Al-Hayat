@@ -28,7 +28,7 @@ from app.auth.service import (
     refresh_token_service,
     logout,
 )
-from app.auth.dependencies import get_current_user, get_reset_password_email
+from app.auth.dependencies import get_current_user
 from app.auth.models import User
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -107,7 +107,7 @@ async def forget_password_route(
 @router.post(
     "/verify-reset-code",
     response_model=VerifyResetCodeResponse,
-    summary="Verify reset code and get temporary reset token",
+    summary="Verify reset code",
 )
 @limiter.limit("3/minute")
 async def verify_reset_code_route(
@@ -121,16 +121,15 @@ async def verify_reset_code_route(
 @router.post(
     "/reset-password",
     response_model=MessageResponse,
-    summary="Reset password using reset token",
+    summary="Reset password using email and code",
 )
 @limiter.limit("3/minute")
 async def reset_password_route(
     request: Request,
     data: ResetPasswordRequest,
-    email: str = Depends(get_reset_password_email),
     db: AsyncSession = Depends(get_db),
 ):
-    return await reset_password(data, email, db)
+    return await reset_password(data, db)
 
 
 @router.post(

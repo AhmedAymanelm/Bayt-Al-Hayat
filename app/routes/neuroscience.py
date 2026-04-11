@@ -17,14 +17,14 @@ router = APIRouter(prefix="/neuroscience", tags=["neuroscience"])
 
 
 @router.get("/questions", response_model=NeuroscienceQuestionnaireResponse)
-async def get_neuroscience_questionnaire():
+async def get_neuroscience_questionnaire(db: AsyncSession = Depends(get_db)):
     """
     Get neuroscience assessment questionnaire
     
     Returns:
-        NeuroscienceQuestionnaireResponse: Complete questionnaire with 9 questions
+        NeuroscienceQuestionnaireResponse: Complete questionnaire with questions
     """
-    return NeuroscienceService.get_questionnaire()
+    return await NeuroscienceService.get_questionnaire_from_db(db)
 
 
 @router.post("/submit", response_model=NeuroscienceAssessmentResult)

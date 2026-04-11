@@ -19,3 +19,5 @@ python-multipart>=0.0.12
 cloudinary>=1.36.0
 runwayml>=0.1.0
 ffmpeg-python
+timezonefinder
+pytz

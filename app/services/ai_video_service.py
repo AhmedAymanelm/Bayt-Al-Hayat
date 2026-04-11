@@ -168,27 +168,27 @@ class AIVideoService:
     # ── You can paste direct image URLs (Cloudinary, Imgur) here to force Runway to animate them (Image-to-Video) ──
     ZODIAC_IMAGES_REF = {
         "الحمل": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843836/zodiac_images_refs/krr9oddbpcatnlelruaw.png", 
-        "الثور": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843863/zodiac_images_refs/xwyqeebcu5sxgihrg2c7.png", 
+        "الثور": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843556/zodiac_signs/crg9g8o2chbfdg2vzoo6.png", 
         "الجوزاء": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843947/zodiac_images_refs/wxuhxox4tynbd6mida8m.png", 
         "السرطان": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843749/zodiac_images_refs/gxzz5wtcu47qhe3svxbg.png", 
-        "الأسد": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844025/zodiac_images_refs/jwjlfzf2lxq320dmzr4t.png", 
+        "الأسد": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843400/zodiac_signs/j1udnopsrwhp2qae3hpc.png", 
         "العذراء": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844268/zodiac_images_refs/phwba61lrthkgnjt0znc.png", 
         "الميزان": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844314/zodiac_images_refs/rrw2duyspxjkpqhk67p4.png", 
-        "العقرب": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844368/zodiac_images_refs/uwq0z9xgla7dzjibkljk.png", 
+        "العقرب": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843228/zodiac_signs/xhrqzgdmu9hywlfpjlpy.png", 
         "القوس": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844420/zodiac_images_refs/rbmzrxxtkpxazpdykwlc.png", 
-        "الجدي": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844465/zodiac_images_refs/aym10meu4hihvvvzbpul.png", 
+        "الجدي": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843139/zodiac_signs/gupnhdbo8wa1sqzqghf4.png", 
         "الدلو": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844541/zodiac_images_refs/uuvb8ewex6dlw6jfrnqb.png", 
         "الحوت": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844579/zodiac_images_refs/p2emtfj9e6ibbyzok09r.png",
         "Aries": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843836/zodiac_images_refs/krr9oddbpcatnlelruaw.png", 
-        "Taurus": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843863/zodiac_images_refs/xwyqeebcu5sxgihrg2c7.png", 
+        "Taurus": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843556/zodiac_signs/crg9g8o2chbfdg2vzoo6.png", 
         "Gemini": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843947/zodiac_images_refs/wxuhxox4tynbd6mida8m.png", 
         "Cancer": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774843749/zodiac_images_refs/gxzz5wtcu47qhe3svxbg.png", 
-        "Leo": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844025/zodiac_images_refs/jwjlfzf2lxq320dmzr4t.png", 
+        "Leo": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843400/zodiac_signs/j1udnopsrwhp2qae3hpc.png", 
         "Virgo": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844268/zodiac_images_refs/phwba61lrthkgnjt0znc.png", 
         "Libra": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844314/zodiac_images_refs/rrw2duyspxjkpqhk67p4.png", 
-        "Scorpio": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844368/zodiac_images_refs/uwq0z9xgla7dzjibkljk.png", 
+        "Scorpio": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843228/zodiac_signs/xhrqzgdmu9hywlfpjlpy.png", 
         "Sagittarius": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844420/zodiac_images_refs/rbmzrxxtkpxazpdykwlc.png", 
-        "Capricorn": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844465/zodiac_images_refs/aym10meu4hihvvvzbpul.png", 
+        "Capricorn": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1775843139/zodiac_signs/gupnhdbo8wa1sqzqghf4.png", 
         "Aquarius": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844541/zodiac_images_refs/uuvb8ewex6dlw6jfrnqb.png", 
         "Pisces": "https://res.cloudinary.com/dz0ljvg1j/image/upload/v1774844579/zodiac_images_refs/p2emtfj9e6ibbyzok09r.png"
     }
@@ -220,39 +220,59 @@ class AIVideoService:
         """Helper to generate and poll a single video clip concurrently."""
         print(f"🎥 [Scene {scene_idx}] Generating cinematic animation...")
         
-        # Use image-to-video if a valid image reference URL is provided
-        if prompt_image and len(prompt_image.strip()) > 10:
-            print(f"🖼️ [Scene {scene_idx}] Using Image Reference for accuracy: {prompt_image[:30]}...")
-            task = await client.image_to_video.create(
-                model=model,
-                prompt_image=prompt_image.strip(),
-                prompt_text=prompt_text,
-                ratio="1280:720",
-                duration=10
-            )
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Use image-to-video if a valid image reference URL is provided
+                if prompt_image and len(prompt_image.strip()) > 10:
+                    print(f"🖼️ [Scene {scene_idx}] Using Image Reference for accuracy: {prompt_image[:30]}...")
+                    task = await client.image_to_video.create(
+                        model=model,
+                        prompt_image=prompt_image.strip(),
+                        prompt_text=prompt_text,
+                        ratio="1280:720",
+                        duration=8
+                    )
+                else:
+                    print(f"📝 [Scene {scene_idx}] Using Text-to-Video mode.")
+                    task = await client.text_to_video.create(
+                        model=model,
+                        prompt_text=prompt_text,
+                        ratio="1280:720",
+                        duration=8
+                    )
+                # Poll for completion
+                while True:
+                    task = await client.tasks.retrieve(task.id)
+                    if task.status == "SUCCEEDED":
+                        out = task.output
+                        if isinstance(out, list) and len(out) > 0:
+                            return out[0]
+                        elif isinstance(out, dict):
+                            return out.get("video")
+                        return str(out)
+                    elif task.status in ["PENDING", "THROTTLED"]:
+                        print(f"⏳ [Scene {scene_idx}] Task is {task.status}... Waiting in queue.")
+                    elif task.status in ["FAILED", "CANCELLED"]:
+                        err = getattr(task, "error", f"Unknown error (Status: {task.status})")
+                        raise Exception(f"Runway Task Failed [Scene {scene_idx}]: {err}")
+                    
+                    await asyncio.sleep(5)
+                
+                # If it didn't break due to THROTTLED, then it's done or errored elsewhere
+                if task.status == "SUCCEEDED":
+                    break
+                    
+            except Exception as e:
+                if "429" in str(e) or "throttle" in str(e).lower():
+                    print(f"⚠️ [Scene {scene_idx}] API Rate Limit (429)! Retrying... (Attempt {attempt+1}/{max_retries})")
+                else:
+                    raise
+                    
+            # If we reached here without returning, we need to retry. Wait before retrying.
+            await asyncio.sleep(10)
         else:
-            print(f"📝 [Scene {scene_idx}] Using Text-to-Video mode.")
-            task = await client.text_to_video.create(
-                model=model,
-                prompt_text=prompt_text,
-                ratio="1280:720",
-                duration=10
-            )
-        # Poll for completion
-        while True:
-            task = await client.tasks.retrieve(task.id)
-            if task.status == "SUCCEEDED":
-                out = task.output
-                if isinstance(out, list) and len(out) > 0:
-                    return out[0]
-                elif isinstance(out, dict):
-                    return out.get("video")
-                return str(out)
-            elif task.status in ["FAILED", "CANCELLED", "THROTTLED"]:
-                err = getattr(task, "error", f"Unknown error (Status: {task.status})")
-                raise Exception(f"Runway Task Failed [Scene {scene_idx}]: {err}")
-            
-            await asyncio.sleep(5)
+            raise Exception(f"Runway Task Failed [Scene {scene_idx}]: Throttled repeatedly, exceeded max retries.")
 
     @classmethod
     async def _download_clip(cls, url: str, path: str) -> str:
@@ -329,7 +349,7 @@ class AIVideoService:
         neuro_pattern: Optional[str] = None,
         zodiac_sign: Optional[str] = None,
         avatar: str = "",
-        model: str = "gen4.5",
+        model: str = "veo3.1_fast",
         include_video: bool = True,
         **kwargs
     ) -> Dict[str, Any]:
@@ -355,12 +375,15 @@ class AIVideoService:
             print(f"✨ Symbol: {symbol_data['name_ar']}")
             print(f"🎨 Colors: bg={color_data['bg'][:20]}.. accent={color_data['accent']}")
 
+            # Safety and relaxing vibe modifier to ensure non-scary, natural output
+            relaxing_modifier = " Soothing, beautiful, and deeply relaxing to watch. Not scary, no creepy or uncanny elements, very natural and safe."
+
             # Format the 3 prompts
             formatted_prompts = [
                 pt.format(
                     bg_color=color_data["bg"],
                     accent_color=color_data["accent"],
-                    vibe_desc=color_data["vibe"]
+                    vibe_desc=color_data["vibe"] + relaxing_modifier
                 ) for pt in symbol_data["video_prompts"]
             ]
 
@@ -370,7 +393,7 @@ class AIVideoService:
                 formatted_prompts[0] = zodiac_scene1.format(
                     bg_color=color_data["bg"],
                     accent_color=color_data["accent"],
-                    vibe_desc=color_data["vibe"]
+                    vibe_desc=color_data["vibe"] + relaxing_modifier
                 )
                 print(f"✨ [Scene 1] Zodiac-specific intro: {zodiac_sign}")
             else:
@@ -392,9 +415,9 @@ class AIVideoService:
                 from runwayml import AsyncRunwayML
                 client = AsyncRunwayML(api_key=runway_key)
                 
-                # 1. Start generation of all 3 clips sequentially
-                print("🚀 Launching 3 Runway sequential tasks to avoid rate limits...")
-                clip_urls = []
+                # 1. Start generation of all 3 clips CONCURRENTLY to speed up queueing
+                print("🚀 Launching 3 Runway tasks CONCURRENTLY to optimize queue time...")
+                task_futures = []
                 for i, prompt in enumerate(formatted_prompts):
                     # Determine Which Image to Use Based on Scene
                     scene_img = None
@@ -403,13 +426,13 @@ class AIVideoService:
                     elif i == 1: # Scene 2: Egyptian Neuroscience Symbol
                         scene_img = symbol_data.get("prompt_image", "")
                         
-                    url = await cls._generate_single_clip(client, prompt, i+1, model, scene_img)
-                    clip_urls.append(url)
-                    # optional delay if needed, but sequential is usually enough
-                    if i < len(formatted_prompts) - 1:
-                        await asyncio.sleep(2)
+                    task_futures.append(asyncio.create_task(cls._generate_single_clip(client, prompt, i+1, model, scene_img)))
+                    # Stagger by 2 seconds
+                    await asyncio.sleep(2)
                 
-                print(f"✅ All 3 clips gathered: {clip_urls}")
+                clip_urls = await asyncio.gather(*task_futures)
+                
+                print(f"✅ All 3 clips gathered concurrently: {clip_urls}")
 
                 # 2. Download the clips concurrently
                 print("📥 Downloading clips locally...")
@@ -444,7 +467,7 @@ class AIVideoService:
                 
                 print(f"✅ Final 30-second Video ready at: {final_video_path}")
                 
-                # Cloudinary Upload to save local server space
+                # Cloudinary Upload with Retries
                 print("☁️ Uploading final video to Cloudinary...")
                 cloudinary.config(
                     cloud_name=await get_env_or_db("cloudinary_cloud_name"),
@@ -452,15 +475,28 @@ class AIVideoService:
                     api_secret=await get_env_or_db("cloudinary_api_secret", "CLOUDINARY_API_SECRET")
                 )
                 
-                # Run synchronous upload in thread to not block async loop
-                upload_res = await asyncio.to_thread(
-                    cloudinary.uploader.upload,
-                    final_video_path,
-                    resource_type="video",
-                    folder="bayt_al_hayat_final_journeys"
-                )
-                video_url = upload_res["secure_url"]
-                print(f"✅ Uploaded successfully: {video_url}")
+                max_upload_retries = 3
+                video_url = None
+                for attempt in range(max_upload_retries):
+                    try:
+                        # Run synchronous upload in thread to not block async loop
+                        upload_res = await asyncio.to_thread(
+                            cloudinary.uploader.upload,
+                            final_video_path,
+                            resource_type="video",
+                            folder="bayt_al_hayat_final_journeys"
+                        )
+                        video_url = upload_res["secure_url"]
+                        print(f"✅ Uploaded successfully: {video_url}")
+                        break
+                    except Exception as upload_err:
+                        print(f"⚠️ Cloudinary Upload Attempt {attempt+1} failed: {upload_err}")
+                        if attempt < max_upload_retries - 1:
+                            wait_time = (attempt + 1) * 5
+                            print(f"⏳ Waiting {wait_time}s before retry...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            raise Exception(f"Cloudinary upload failed after {max_upload_retries} attempts: {upload_err}")
 
                 # Save to DB cache for future users
                 await cls._save_video_to_cache(zodiac_sign, neuro_pattern, symbol_key, video_url)

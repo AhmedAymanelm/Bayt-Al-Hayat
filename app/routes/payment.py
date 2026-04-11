@@ -17,7 +17,7 @@ from app.models.payment import PaymentRecord
 
 payment_router = APIRouter(
     prefix="/payment",
-    tags=["Payment (Kashier)"]
+    tags=["Payment (Fawaterk)"]
 )
 limiter = Limiter(key_func=get_remote_address)
 
@@ -38,19 +38,18 @@ async def _get_setting(key: str, fallback_env: str = "", default: str = "") -> s
     return os.environ.get(fallback_env, default)
 
 
-async def _get_kashier_config():
-    """Returns all Kashier config from DB (or env fallback)."""
-    merchant_id = await _get_setting("kashier_merchant_id", "KASHIER_MERCHANT_ID")
-    api_key     = await _get_setting("kashier_api_key",     "KASHIER_API_KEY")
-    secret_key  = await _get_setting("kashier_secret_key",  "KASHIER_SECRET_KEY") or api_key
-    mode        = await _get_setting("kashier_mode",        "KASHIER_MODE", "test")
-    base        = "https://test-api.kashier.io" if mode == "test" else "https://api.kashier.io"
-    return merchant_id, api_key, secret_key, mode, base
+async def _get_fawaterk_config():
+    """Returns all Fawaterk config from DB (or env fallback)."""
+    api_key = await _get_setting("fawaterk_api_key", "FAWATERK_API_KEY")
+    mode    = await _get_setting("fawaterk_mode",    "FAWATERK_MODE", "test")
+    base    = "https://staging.fawaterk.com" if mode == "test" else "https://app.fawaterk.com"
+    return api_key, mode, base
 
 
 class PaymentRequest(BaseModel):
     # 'amount' and 'currency' discouraged from being trusted from client side. We compute it server side.
     service_type: str = "final_report_video"
+    payment_method_id: int = 2 # Default to 2 for cards/generic checkout if none provided
 
 @payment_router.get("/price")
 async def get_service_price(service_type: str = "final_report_video"):
@@ -71,17 +70,41 @@ async def get_service_price(service_type: str = "final_report_video"):
         "currency": currency
     }
 
+@payment_router.get("/methods")
+async def get_payment_methods():
+    """
+    Fetch all enabled payment methods from Fawaterk for the connected account.
+    """
+    api_key, _, api_base = await _get_fawaterk_config()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Fawaterk API key is not configured")
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{api_base}/api/v2/getPaymentmethods", headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=f"Fawaterk API Error: {e.response.text}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
 @payment_router.post("/checkout")
 @limiter.limit("10/minute")
 async def create_checkout_session(request: Request, body: PaymentRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """
-    Create a Kashier Payment Session using the v3 API.
+    Create a Fawaterk Payment Invoice.
     The amount and currency are securely fetched from the database settings to prevent client-side tampering.
     """
-    merchant_id, api_key, secret_key, mode, api_base = await _get_kashier_config()
+    api_key, mode, api_base = await _get_fawaterk_config()
 
-    if not merchant_id or not api_key:
-        raise HTTPException(status_code=500, detail="Kashier credentials are not configured")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Fawaterk credentials are not configured")
 
     # Securely determine the amount and currency from the server config
     price_str = await _get_setting(f"price_{body.service_type}", default="250.00")
@@ -93,45 +116,52 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         amount = 250.00
         
     order_id = f"ORD_{str(uuid.uuid4()).replace('-', '')[:8]}"
-    expire_at = (datetime.utcnow() + timedelta(hours=2)).isoformat() + "Z"
 
     payload = {
-        "expireAt": expire_at,
-        "maxFailureAttempts": 3,
-        "paymentType": "credit",
-        "amount": str(amount),
+        "payment_method_id": body.payment_method_id,
+        "cartTotal": str(amount),
         "currency": currency,
-        "order": order_id,
-        "merchantRedirect": "https://baytalhayat.redirect/payment-success",
-        "display": "en",
-        "type": "one-time",
-        "allowedMethods": "card,wallet",
-        "iframeBackgroundColor": "#FFFFFF",
-        "merchantId": merchant_id,
-        "description": f"Payment for {body.service_type.replace('_', ' ').title()}",
-        "manualCapture": False,
         "customer": {
+            "first_name": current_user.fullname.split(' ')[0] if current_user.fullname else "Customer",
+            "last_name": current_user.fullname.split(' ')[-1] if current_user.fullname and ' ' in current_user.fullname else "Name",
             "email": current_user.email,
-            "reference": str(current_user.id)
+            "phone": "01000000000",
+            "address": "Egypt"
         },
-        "saveCard": "optional",
-        "retrieveSavedCard": True,
-        "interactionSource": "ECOMMERCE",
-        "enable3DS": True
+        "redirectionUrls": {
+            "successUrl": "https://baytalhayat.redirect/payment-success",
+            "failUrl": "https://baytalhayat.redirect/payment-error",
+            "pendingUrl": "https://baytalhayat.redirect/payment-pending"
+        },
+        "cartItems": [
+            {
+                "name": f"Payment for {body.service_type.replace('_', ' ').title()}",
+                "price": str(amount),
+                "quantity": "1"
+            }
+        ],
+        "redirectOption": True  # Always receive a redirectTo link for all methods
     }
 
     headers = {
-        "Authorization": secret_key,
-        "api-key": api_key,
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(f"{api_base}/v3/payment/sessions", json=payload, headers=headers)
+            response = await client.post(f"{api_base}/api/v2/invoiceInitPay", json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-            session_id = data.get("_id")
+            
+            fawaterk_data = data.get("data", {})
+            session_id = str(fawaterk_data.get("invoice_id"))
+            
+            # get the url
+            checkout_url = fawaterk_data.get("payment_data", {}).get("redirectTo")
+            if not checkout_url:
+                invoice_key = fawaterk_data.get("invoice_key", "")
+                checkout_url = f"{api_base}/invoice/{session_id}/{invoice_key}"
 
             payment_record = PaymentRecord(
                 user_id=current_user.id,
@@ -148,12 +178,12 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
             return {
                 "message": "Payment session created successfully",
                 "session_id": session_id,
-                "session_url": data.get("sessionUrl"),
+                "session_url": checkout_url,
                 "order_id": order_id,
                 "amount": amount
             }
         except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=f"Kashier API Error: {e.response.text}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"Fawaterk API Error: {e.response.text}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -161,20 +191,20 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
 async def verify_payment(session_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """
     Called by the Flutter app after the checkout UI returns.
-    Verifies the payment session status with Kashier and updates the DB.
+    Verifies the payment session status with Fawaterk and updates the DB.
     """
-    _, api_key, secret_key, _, api_base = await _get_kashier_config()
+    api_key, _, api_base = await _get_fawaterk_config()
     headers = {
-        "Authorization": secret_key,
-        "api-key": api_key
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
     }
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{api_base}/v3/payment/sessions/{session_id}/payment", headers=headers)
+            response = await client.get(f"{api_base}/api/v2/getInvoiceData/{session_id}", headers=headers)
             response.raise_for_status()
             data = response.json().get("data", {})
-            kashier_status = data.get("status")
+            fawaterk_status = data.get("invoice_status", "").lower()
 
             result = await db.execute(select(PaymentRecord).where(PaymentRecord.session_id == session_id, PaymentRecord.user_id == current_user.id))
             payment_record = result.scalar_one_or_none()
@@ -182,12 +212,14 @@ async def verify_payment(session_id: str, current_user: User = Depends(get_curre
             if not payment_record:
                 raise HTTPException(status_code=404, detail="Payment record not found")
 
-            if kashier_status in ("CAPTURED", "SUCCESS", "PAID", "APPROVED"):
+            if fawaterk_status == "paid":
                 payment_record.status = "SUCCESS"
-            elif kashier_status in ("FAILED", "DECLINED", "REJECTED", "CANCELLED"):
+            elif fawaterk_status in ("canceled", "failed"):
                 payment_record.status = "FAILED"
+            else:
+                payment_record.status = "PENDING"
 
-            payment_record.payment_method = data.get("method")
+            payment_record.payment_method = data.get("payment_method")
             await db.commit()
 
             return {
@@ -196,100 +228,98 @@ async def verify_payment(session_id: str, current_user: User = Depends(get_curre
                 "amount": payment_record.amount
             }
         except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=f"Kashier API Error: {e.response.text}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"Fawaterk API Error: {e.response.text}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
 @payment_router.get("/status/{session_id}")
 async def get_payment_status(session_id: str):
     """
-    Get the status of a Kashier Payment Session.
+    Get the status of a Fawaterk Payment Invoice.
     """
-    _, api_key, secret_key, _, api_base = await _get_kashier_config()
+    api_key, _, api_base = await _get_fawaterk_config()
     headers = {
-        "Authorization": secret_key,
-        "api-key": api_key
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
     }
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{api_base}/v3/payment/sessions/{session_id}/payment", headers=headers)
+            response = await client.get(f"{api_base}/api/v2/getInvoiceData/{session_id}", headers=headers)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=f"Kashier API Error: {e.response.text}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"Fawaterk API Error: {e.response.text}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
 @payment_router.post("/webhook")
-async def kashier_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+async def fawaterk_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """
-    Webhook endpoint to receive payment status updates from Kashier.
-    Kashier sends a POST with JSON body + HMAC signature header.
+    Webhook endpoint to receive payment status updates from Fawaterk.
+    Fawaterk sends a POST with JSON body.
     """
-    import hmac
-    import hashlib
     import json
-
+    
     body_bytes = await request.body()
     raw_body = body_bytes.decode("utf-8") if body_bytes else "{}"
-    signature_header = request.headers.get("x-kashier-signature") or request.headers.get("signature", "")
-
-    # ── Mandatory HMAC signature verification ────────────────────────────────
-    _, _, secret, _, _ = await _get_kashier_config()
-    if not secret:
-        raise HTTPException(status_code=500, detail="Webhook secret not configured on server")
-    if not signature_header:
-        return {"status": "ignored", "reason": "missing_signature"}
-
-    import hmac as _hmac
-    import hashlib
-    expected_sig = _hmac.new(
-        secret.encode("utf-8"),
-        body_bytes,
-        hashlib.sha256
-    ).hexdigest()
-    if not _hmac.compare_digest(expected_sig, signature_header):
-        print("⚠️  Kashier webhook: invalid signature, rejecting.")
-        return {"status": "ignored", "reason": "invalid_signature"}
-
+    
     try:
         payload = json.loads(raw_body)
     except Exception:
         return {"status": "ignored", "reason": "invalid_json"}
 
-    print("================ KASHIER WEBHOOK ================")
+    print("================ FAWATERK WEBHOOK ================")
     print(payload)
-    print("=================================================")
+    print("==================================================")
 
     # ── Extract fields ────────────────────────────────────────────────────────
-    order_id       = payload.get("orderId") or payload.get("order_id")
-    session_id     = payload.get("sessionId") or payload.get("session_id") or payload.get("_id")
-    kashier_status = payload.get("status") or payload.get("paymentStatus", "")
-    payment_method = payload.get("paymentMethod") or payload.get("method")
+    invoice_id = str(payload.get("invoice_id"))
+    fawaterk_status = payload.get("invoice_status", "").lower()
 
-    if not order_id and not session_id:
-        return {"status": "ignored", "reason": "no_order_id"}
+    if not invoice_id:
+        return {"status": "ignored", "reason": "no_invoice_id"}
+
+    # ── Security check: Fetch actual invoice status from Fawaterk API ---------
+    api_key, _, api_base = await _get_fawaterk_config()
+    if not api_key:
+        return {"status": "ignored", "reason": "no_api_key"}
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    import httpx
+    verified_status = "pending"
+    payment_method = ""
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{api_base}/api/v2/getInvoiceData/{invoice_id}", headers=headers)
+            response.raise_for_status()
+            fetched_data = response.json().get("data", {})
+            verified_status = fetched_data.get("invoice_status", "").lower()
+            payment_method = fetched_data.get("payment_method", "")
+        except Exception as e:
+            print(f"⚠️ Webhook: Failed to verify invoice {invoice_id} status via API: {e}")
+            return {"status": "ignored", "reason": "verification_failed"}
 
     # ── Find payment record ───────────────────────────────────────────────────
     result = await db.execute(
         select(PaymentRecord).where(
-            or_(
-                PaymentRecord.order_id == order_id,
-                PaymentRecord.session_id == session_id
-            )
+            PaymentRecord.session_id == invoice_id
         )
     )
     payment = result.scalar_one_or_none()
 
     if not payment:
-        print(f"⚠️  Webhook: no PaymentRecord found for order={order_id} session={session_id}")
+        print(f"⚠️ Webhook: no PaymentRecord found for session={invoice_id}")
         return {"status": "not_found"}
 
-    # ── Map Kashier status → our status ───────────────────────────────────────
-    if kashier_status.upper() in ("CAPTURED", "SUCCESS", "PAID", "APPROVED"):
+    # ── Map Fawaterk status → our status ──────────────────────────────────────
+    if verified_status == "paid":
         payment.status = "SUCCESS"
-    elif kashier_status.upper() in ("FAILED", "DECLINED", "REJECTED", "CANCELLED", "EXPIRED"):
+    elif verified_status in ("canceled", "failed"):
         payment.status = "FAILED"
     else:
         payment.status = "PENDING"

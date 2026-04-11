@@ -7,8 +7,8 @@ from app.auth.models import User
 from app.auth.dependencies import get_current_user
 from app.models.history import AssessmentHistory
 from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
-from ..models.astrology import AstrologyRequest, AstrologyResponse
+from pydantic import BaseModel, Field, model_validator
+from ..models.astrology import AstrologyRequest, AstrologyResponse, BirthDataInput
 from ..services.astrology_service import AstrologyService
 from ..services.ai_video_service import AIVideoService
 from ..services.video_analytics import VideoAnalytics
@@ -20,9 +20,11 @@ router = APIRouter(prefix="/astrology", tags=["astrology"])
 
 class VideoGenerationRequest(BaseModel):
     name: str
-    birth_date: str
+    birth_data: Optional[BirthDataInput] = None
+    birth_date: Optional[str] = None
     day_type: str = "today"
     birth_time: Optional[str] = None
+    city_of_birth: str = ""
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     model: str = Field(default="gen4.5", description="Runway model")
@@ -34,6 +36,12 @@ class VideoGenerationRequest(BaseModel):
     # New fields for symbol & color selection
     zodiac_sign: Optional[str] = Field(default=None, description="e.g. العقرب or Scorpio")
     neuro_pattern: Optional[str] = Field(default=None, description="e.g. Fight, Flight, Freeze, Fawn")
+
+    @model_validator(mode="after")
+    def validate_birth_inputs(self):
+        if not self.birth_date and not self.birth_data:
+            raise ValueError("birth_date or birth_data is required")
+        return self
 
 
 @router.post("/analyze", response_model=AstrologyResponse)
@@ -79,8 +87,10 @@ async def generate_astrology_video(
         astro_request = AstrologyRequest(
             name=request.name,
             birth_date=request.birth_date,
+            birth_data=request.birth_data,
             day_type=request.day_type,
             birth_time=request.birth_time,
+            city_of_birth=request.city_of_birth,
             latitude=request.latitude,
             longitude=request.longitude
         )
@@ -140,8 +150,10 @@ async def generate_astrology_video_stream(
             astro_request = AstrologyRequest(
                 name=request.name,
                 birth_date=request.birth_date,
+                birth_data=request.birth_data,
                 day_type=request.day_type,
                 birth_time=request.birth_time,
+                city_of_birth=request.city_of_birth,
                 latitude=request.latitude,
                 longitude=request.longitude
             )

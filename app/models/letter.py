@@ -1,3 +1,4 @@
+import re
 from pydantic import BaseModel, Field, field_validator
 from typing import Literal
 
@@ -10,11 +11,13 @@ class LetterAnalysisRequest(BaseModel):
     @field_validator('name')
     @classmethod
     def validate_name(cls, v: str) -> str:
-        """التحقق من أن الاسم غير فارغ بعد إزالة المسافات"""
+        """التحقق من أن الاسم غير فارغ بعد إزالة المسافات وأن يكون بالعربية"""
         cleaned = v.strip()
         if not cleaned:
             raise ValueError('الاسم لا يمكن أن يكون فارغًا')
-        return v
+        if not re.match(r"^[\u0600-\u06FF\s]+$", cleaned):
+            raise ValueError('يجب أن يكون الاسم باللغة العربية فقط')
+        return cleaned
     
     @field_validator('age')
     @classmethod

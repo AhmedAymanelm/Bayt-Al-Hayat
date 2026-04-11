@@ -60,67 +60,51 @@ async def submit_comprehensive_answers(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-async def generate_video_and_update_history(history_id: UUID, video_data: dict, neuro_pattern: str, zodiac_sign: str):
-    """Background task to generate video and update history record."""
+
+
+async def _background_video_generation(video_data: dict, neuro_pattern: str, zodiac_sign: str, report_result: dict, user_id, input_data: dict):
+    """Executes video generation in the background and saves history to the DB."""
     try:
-        from app.database import async_session_maker
-        from app.models.history import AssessmentHistory
-        from sqlalchemy.orm.attributes import flag_modified
-        import asyncio
-        
-        print(f"⏳ [Background] Started processing video for history {history_id}")
-        video_result = await AIVideoService.generate_full_video(
+        final_video_data = await AIVideoService.generate_full_video(
             assessment_data=video_data,
             output_dir="videos/comprehensive",
             neuro_pattern=neuro_pattern,
             zodiac_sign=zodiac_sign,
-            model="gen4.5"
+            model="veo3.1_fast"
         )
-        
+        # Save to history once completed using a fresh DB session
+        from app.database import async_session_maker
+        from app.models.history import AssessmentHistory
         async with async_session_maker() as fresh_db:
-            history = await fresh_db.get(AssessmentHistory, history_id)
-            if history:
-                history.video_url = video_result.get("video_url") if isinstance(video_result, dict) else None
-                current_result = history.result_data
-                current_result["video"] = video_result
-                history.result_data = current_result
-                flag_modified(history, "result_data")
-                await fresh_db.commit()
-                print(f"✅ [Background] Video ready and saved for history {history_id}")
+            history_entry = AssessmentHistory(
+                user_id=user_id,
+                assessment_type="comprehensive",
+                input_data=input_data,
+                result_data={"analysis": video_data, "report": report_result, "video": final_video_data},
+                video_url=final_video_data.get("video_url") if isinstance(final_video_data, dict) else None
+            )
+            fresh_db.add(history_entry)
+            await fresh_db.commit()
     except Exception as e:
-        print(f"❌ [Background] Failed for history {history_id}: {e}")
-        try:
-            from app.database import async_session_maker
-            from app.models.history import AssessmentHistory
-            from sqlalchemy.orm.attributes import flag_modified
-            async with async_session_maker() as fresh_db:
-                history = await fresh_db.get(AssessmentHistory, history_id)
-                if history:
-                    current_result = history.result_data
-                    current_result["video"] = {
-                        "status": "failed",
-                        "message": f"عذراً، حدث خطأ فني غير متوقع. يرجى المحاولة لاحقاً أو التواصل مع الدعم الفني."
-                    }
-                    history.result_data = current_result
-                    flag_modified(history, "result_data")
-                    await fresh_db.commit()
-        except Exception as inner_e:
-            print(f"❌ [Background] Also failed to update error state: {inner_e}")
+        print(f"Background Video Generation Failed for {zodiac_sign}/{neuro_pattern}: {e}")
 
 @router.post("/generate-video", response_model=Dict[str, Any])
-async def generate_comprehensive_video(
+async def generate_comprehensive_report_and_video(
     submission: ComprehensiveAnswers,
-    payment_session_id: str,
     background_tasks: BackgroundTasks,
+    payment_session_id: str = "test",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Generate AI video combining psychology, neuroscience, and astrology analysis
+    1. Verifies Payment.
+    2. Instantly generates AI Text Report (Psychology + Neuroscience + Astrology).
+    3. Triggers cinematic AI Video Generation in the Background.
+    Return returns immediately so mobile apps do not time out.
     
     Args:
         submission: Complete user data for all three assessments
-        payment_session_id: The Kashier session ID for the successful payment
+        payment_session_id: The Fawaterk session ID for the successful payment
     
     Returns:
         Dict with comprehensive analysis and video generation result
@@ -161,7 +145,7 @@ async def generate_comprehensive_video(
             neuroscience_answers=submission.neuroscience_answers,
             birth_date=submission.birth_date,
             birth_time=submission.birth_time,
-            birth_place=submission.birth_place
+            birth_place=submission.city_of_birth
         )
         
         # Inject letter result if provided by the client
@@ -171,10 +155,10 @@ async def generate_comprehensive_video(
         neuro_pattern = video_data.get("neuroscience", {}).get("dominant")
         zodiac_sign = video_data.get("astrology", {}).get("sun_sign")
         
-        # 3. Quick Cache Check
+        # 3. Check Cache
         cached_video = await AIVideoService._get_cached_video(zodiac_sign, neuro_pattern)
-
-        # 4. Immediate AI Text Report (takes 5-10 seconds)
+        
+        # 4. Generate AI Text Report (Instantaneous ~10s)
         report_result = await ComprehensiveService.generate_comprehensive_report(
             name=submission.name,
             psychology_result=video_data.get("psychology", {}),
@@ -182,64 +166,53 @@ async def generate_comprehensive_video(
             astrology_result=video_data.get("astrology", {}),
             letter_result=submission.letter_result
         )
-        
-        # 5. Save initial history record
-        pending_video_status = {
-            "status": "processing", 
-            "message": "🎬 جاري الآن تجهيز وإخراج رحلتك السينمائية المخصصة لبرجك ونمطك العصبي... السعي للكمال يأخذ وقتاً، استمتع بقراءة تقريرك!"
-        }
-        final_video_data = cached_video or pending_video_status
-        
-        history_entry = AssessmentHistory(
-            user_id=current_user.id,
-            assessment_type="comprehensive",
-            input_data=submission.model_dump(),
-            result_data={"analysis": video_data, "report": report_result, "video": final_video_data},
-            video_url=cached_video.get("video_url") if cached_video else None
-        )
-        db.add(history_entry)
-        await db.commit()
-        await db.refresh(history_entry)
-        
-        # 6. Spawn Background Task if not cached
-        if not cached_video:
-            # Detach completely using asyncio.create_task rather than FastAPI BackgroundTasks.
-            # This allows the original DB session dependency to close immediately,
-            # preventing asyncpg InterfaceError (closed connections) after 15 min.
-            import asyncio
-            asyncio.create_task(
-                generate_video_and_update_history(
-                    history_id=history_entry.id,
-                    video_data=video_data,
-                    neuro_pattern=neuro_pattern,
-                    zodiac_sign=zodiac_sign
-                )
+
+        # 5. Handle Background Video or Immediate DB Save
+        if cached_video:
+            video_response = {"status": "ready", "video_url": cached_video.get("video_url")}
+            # Save history immediately since video is already ready
+            history_entry = AssessmentHistory(
+                user_id=current_user.id,
+                assessment_type="comprehensive",
+                input_data=submission.model_dump(),
+                result_data={"analysis": video_data, "report": report_result, "video": cached_video},
+                video_url=cached_video.get("video_url")
+            )
+            db.add(history_entry)
+            await db.commit()
+        else:
+            video_response = {"status": "generating", "video_url": None}
+            # Queue the video generation to process in the background
+            background_tasks.add_task(
+                _background_video_generation,
+                video_data, neuro_pattern, zodiac_sign, report_result, current_user.id, submission.model_dump()
             )
         
         return {
             "status": "success",
-            "history_id": str(history_entry.id),
             "analysis": video_data,
             "report": report_result,
-            "video": final_video_data,
+            "zodiac_sign": zodiac_sign,
+            "neuro_pattern": neuro_pattern,
+            "video": video_response,
             "payment_order_id": payment.order_id
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Comprehensive processing failed: {str(e)}")
 
-@router.get("/video-status/{history_id}")
-async def get_video_status(history_id: UUID, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    """API for Flutter to poll the video status while reading."""
-    history = await db.get(AssessmentHistory, history_id)
-    if not history or history.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Assessment not found")
-        
-    return {
-        "status": "success", 
-        "video": history.result_data.get("video", {}), 
-        "video_url": history.video_url
-    }
+@router.get("/check-video-status")
+async def check_video_status(zodiac_sign: str, neuro_pattern: str):
+    """
+    Endpoint for mobile apps to poll video generation status.
+    Call this every 10 seconds if POST /generate-video returns video.status == 'generating'.
+    """
+    cached_video = await AIVideoService._get_cached_video(zodiac_sign, neuro_pattern)
+    if cached_video:
+        return {"status": "ready", "video_url": cached_video.get("video_url")}
+    
+    return {"status": "generating", "video_url": None}
+
 
 
 @router.post("/analyze-from-results", response_model=Dict[str, Any])

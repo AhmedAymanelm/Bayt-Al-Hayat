@@ -30,9 +30,7 @@ class UpdateGatewayRequest(BaseModel):
     fees: Optional[str] = None
     fees_type: Optional[str] = None
     description: Optional[str] = None
-    merchant_id: Optional[str] = None
     api_key: Optional[str] = None
-    secret_key: Optional[str] = None
     mode: Optional[str] = None
 
 # ─── Admin Guard ───────────────────────────────────────────────────────────────
@@ -864,22 +862,20 @@ async def get_gateway_settings(
 
     return [
         {
-            "id": "kashier",
-            "name": "Kashier",
-            "status": data.get("kashier_status", type("o", (), {"value": "inactive"})()).value,
-            "fees": gv("kashier_fees"),
-            "fees_type": gv("kashier_fees_type"),
-            "description": gv("kashier_description"),
-            "merchant_id": gv("kashier_merchant_id"),
-            "api_key": gv("kashier_api_key"),
-            "secret_key": gv("kashier_secret_key"),
-            "mode": gv("kashier_mode"),
+            "id": "fawaterk",
+            "name": "Fawaterk",
+            "status": data.get("fawaterk_status", type("o", (), {"value": "inactive"})()).value,
+            "fees": gv("fawaterk_fees"),
+            "fees_type": gv("fawaterk_fees_type"),
+            "description": gv("fawaterk_description"),
+            "api_key": gv("fawaterk_api_key"),
+            "mode": gv("fawaterk_mode"),
         }
     ]
 
 
-@router.put("/settings/gateways/kashier", summary="Update Kashier gateway settings")
-async def update_kashier_settings(
+@router.put("/settings/gateways/fawaterk", summary="Update Fawaterk gateway settings")
+async def update_fawaterk_settings(
     body: UpdateGatewayRequest,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
@@ -887,14 +883,12 @@ async def update_kashier_settings(
     from datetime import datetime
 
     field_map = {
-        "status": "kashier_status",
-        "fees": "kashier_fees",
-        "fees_type": "kashier_fees_type",
-        "description": "kashier_description",
-        "merchant_id": "kashier_merchant_id",
-        "api_key": "kashier_api_key",
-        "secret_key": "kashier_secret_key",
-        "mode": "kashier_mode",
+        "status": "fawaterk_status",
+        "fees": "fawaterk_fees",
+        "fees_type": "fawaterk_fees_type",
+        "description": "fawaterk_description",
+        "api_key": "fawaterk_api_key",
+        "mode": "fawaterk_mode",
     }
 
     updated = []
@@ -907,6 +901,178 @@ async def update_kashier_settings(
                 setting.value = val
                 setting.updated_at = datetime.utcnow()
                 updated.append(db_key)
+            else:
+                setting = SystemSetting(
+                    key=db_key,
+                    value=val,
+                    group="payment_gateway",
+                    label=db_key.replace('_', ' ').title(),
+                    is_secret="key" in db_key
+                )
+                db.add(setting)
+                updated.append(db_key)
 
     await db.commit()
-    return {"message": f"✅ Kashier gateway updated ({len(updated)} fields)"}
+    return {"message": f"✅ Fawaterk gateway updated ({len(updated)} fields)"}
+
+
+# ─── Questions Management (CRUD) ──────────────────────────────────────────────
+
+from app.models.question import AssessmentQuestion
+
+class CreateQuestionRequest(BaseModel):
+    text: str
+    options: Any  # list for psychology, list for neuroscience
+    options_text: Optional[Dict[str, str]] = None  # only for neuroscience
+    is_active: bool = True
+
+class UpdateQuestionRequest(BaseModel):
+    text: Optional[str] = None
+    options: Optional[Any] = None
+    options_text: Optional[Dict[str, str]] = None
+    is_active: Optional[bool] = None
+
+class ReorderQuestionsRequest(BaseModel):
+    order: List[int]  # list of question IDs in desired order
+
+
+@router.get("/questions/{assessment_type}", summary="Get all questions for an assessment type")
+async def get_questions(
+    assessment_type: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Get all questions for a given assessment type (psychology / neuroscience)."""
+    if assessment_type not in ("psychology", "neuroscience"):
+        raise HTTPException(status_code=400, detail="Type must be 'psychology' or 'neuroscience'")
+
+    result = await db.execute(
+        select(AssessmentQuestion)
+        .where(AssessmentQuestion.assessment_type == assessment_type)
+        .order_by(AssessmentQuestion.order_index)
+    )
+    questions = result.scalars().all()
+    return [q.to_dict() for q in questions]
+
+
+@router.post("/questions/{assessment_type}", summary="Add a new question")
+async def create_question(
+    assessment_type: str,
+    body: CreateQuestionRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Add a new question to an assessment type."""
+    if assessment_type not in ("psychology", "neuroscience"):
+        raise HTTPException(status_code=400, detail="Type must be 'psychology' or 'neuroscience'")
+
+    # Get the next order_index
+    max_order = (await db.execute(
+        select(func.max(AssessmentQuestion.order_index))
+        .where(AssessmentQuestion.assessment_type == assessment_type)
+    )).scalar_one_or_none() or 0
+
+    question = AssessmentQuestion(
+        assessment_type=assessment_type,
+        order_index=max_order + 1,
+        text=body.text,
+        options=body.options,
+        options_text=body.options_text,
+        is_active=body.is_active,
+    )
+    db.add(question)
+    await db.commit()
+    await db.refresh(question)
+    return {"message": "✅ Question added successfully", "question": question.to_dict()}
+
+
+@router.put("/questions/{question_id}", summary="Update a question")
+async def update_question(
+    question_id: int,
+    body: UpdateQuestionRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Update an existing question."""
+    result = await db.execute(
+        select(AssessmentQuestion).where(AssessmentQuestion.id == question_id)
+    )
+    question = result.scalar_one_or_none()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    if body.text is not None:
+        question.text = body.text
+    if body.options is not None:
+        question.options = body.options
+    if body.options_text is not None:
+        question.options_text = body.options_text
+    if body.is_active is not None:
+        question.is_active = body.is_active
+
+    question.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(question)
+    return {"message": "✅ Question updated successfully", "question": question.to_dict()}
+
+
+@router.delete("/questions/{question_id}", summary="Delete a question")
+async def delete_question(
+    question_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Delete a question permanently."""
+    result = await db.execute(
+        select(AssessmentQuestion).where(AssessmentQuestion.id == question_id)
+    )
+    question = result.scalar_one_or_none()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    assessment_type = question.assessment_type
+    deleted_order = question.order_index
+
+    await db.delete(question)
+
+    # Re-index remaining questions
+    remaining = (await db.execute(
+        select(AssessmentQuestion)
+        .where(
+            AssessmentQuestion.assessment_type == assessment_type,
+            AssessmentQuestion.order_index > deleted_order
+        )
+        .order_by(AssessmentQuestion.order_index)
+    )).scalars().all()
+
+    for q in remaining:
+        q.order_index -= 1
+
+    await db.commit()
+    return {"message": "✅ Question deleted successfully"}
+
+
+@router.put("/questions/reorder/{assessment_type}", summary="Reorder questions")
+async def reorder_questions(
+    assessment_type: str,
+    body: ReorderQuestionsRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Reorder questions by providing a list of question IDs in the desired order."""
+    if assessment_type not in ("psychology", "neuroscience"):
+        raise HTTPException(status_code=400, detail="Type must be 'psychology' or 'neuroscience'")
+
+    for new_index, question_id in enumerate(body.order, start=1):
+        result = await db.execute(
+            select(AssessmentQuestion).where(
+                AssessmentQuestion.id == question_id,
+                AssessmentQuestion.assessment_type == assessment_type
+            )
+        )
+        question = result.scalar_one_or_none()
+        if question:
+            question.order_index = new_index
+
+    await db.commit()
+    return {"message": f"✅ {assessment_type} questions reordered successfully"}

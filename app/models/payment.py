@@ -10,7 +10,7 @@ class PaymentRecord(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     
-    # Kashier transaction tracking
+    # Fawaterk transaction tracking
     order_id = Column(String, unique=True, index=True, nullable=False)
     session_id = Column(String, index=True, nullable=True)
     service_type = Column(String, nullable=True) # e.g., "final_report_video"

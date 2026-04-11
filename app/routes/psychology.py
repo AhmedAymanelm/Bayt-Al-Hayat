@@ -15,14 +15,14 @@ router = APIRouter(prefix="/psychology", tags=["psychology"])
 
 
 @router.get("", response_model=QuestionnaireResponse)
-async def get_psychology_questionnaire():
+async def get_psychology_questionnaire(db: AsyncSession = Depends(get_db)):
     """
     Get psychology assessment questionnaire
     
     Returns:
         QuestionnaireResponse: Complete questionnaire with all questions
     """
-    return PsychologyService.get_questionnaire()
+    return await PsychologyService.get_questionnaire_from_db(db)
 
 
 @router.post("/submit", response_model=AssessmentResult)

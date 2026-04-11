@@ -1,89 +1,138 @@
+import json
 import httpx
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
+from openai import AsyncOpenAI
+from timezonefinder import TimezoneFinder
+import pytz
+
 from ..models.astrology import AstrologyRequest, AstrologyResponse
 from app.utils.settings_helper import get_env_or_db
-class AstrologyService:
-    """خدمة منطق الأعمال لعلم الفلك"""
-    
 
-    ASTROLOGY_API_BASE_DEFAULT = "https://json.freeastrologyapi.com"
+class AstrologyService:
+    """خدمة منطق الأعمال لعلم الفلك - التحديث الديناميكي باستخدام OpenAI"""
+    
+    ASTROLOGY_API_BASE_DEFAULT = "https://api.astrology-api.io/api/v3"
 
     ZODIAC_SIGNS_AR = {
-        "aries": "الحمل",
-        "taurus": "الثور",
-        "gemini": "الجوزاء",
-        "cancer": "السرطان",
-        "leo": "الأسد",
-        "virgo": "العذراء",
-        "libra": "الميزان",
-        "scorpio": "العقرب",
-        "sagittarius": "القوس",
-        "capricorn": "الجدي",
-        "aquarius": "الدلو",
-        "pisces": "الحوت"
+        "aries": "الحمل", "taurus": "الثور", "gemini": "الجوزاء", "cancer": "السرطان",
+        "leo": "الأسد", "virgo": "العذراء", "libra": "الميزان", "scorpio": "العقرب",
+        "sagittarius": "القوس", "capricorn": "الجدي", "aquarius": "الدلو", "pisces": "الحوت",
+        "ari": "الحمل", "tau": "الثور", "gem": "الجوزاء", "can": "السرطان",
+        "vir": "العذراء", "lib": "الميزان", "sco": "العقرب",
+        "sag": "القوس", "cap": "الجدي", "aqu": "الدلو", "pis": "الحوت"
     }
-    
 
-    MOOD_TO_PSYCHOLOGICAL = {
-        "Happy": "مستقر نفسياً مع شعور بالرضا والطمأنينة",
-        "Sad": "يميل للتأمل والهدوء، قد تشعر ببعض الكآبة الخفيفة",
-        "Anxious": "بعض التوتر الداخلي، تحتاج لممارسة التنفس العميق",
-        "Energetic": "نشيط ومفعم بالحيوية النفسية والحماس",
-        "Calm": "هادئ ومتزن نفسياً، حالة سلام داخلي",
-        "Stressed": "ضغط نفسي ملحوظ، يحتاج لإدارة أفضل للتوتر",
-        "Optimistic": "إيجابي ومتفائل، حالة نفسية مرتفعة",
-        "Normal": "متوازن ومستقر بشكل عام"
-    }
-    
+    DAILY_LUCKY_COLORS_AR = [
+        "أخضر",
+        "أزرق",
+        "ذهبي",
+        "فضي",
+        "أبيض",
+        "أحمر",
+        "بنفسجي",
+        "برتقالي",
+        "وردي",
+    ]
+
+    @classmethod
+    def _compute_daily_lucky_values(cls, transit_planets: Dict[str, Any], target_date: str) -> Dict[str, str]:
+        """Compute deterministic daily lucky values from transit data and target date."""
+        seed_parts = [target_date]
+        for planet_name in sorted(transit_planets.keys()):
+            planet_data = transit_planets.get(planet_name, {})
+            zodiac = str(planet_data.get("zodiac", ""))
+            degree = str(planet_data.get("degree", ""))
+            seed_parts.append(f"{planet_name}:{zodiac}:{degree}")
+
+        seed_text = "|".join(seed_parts)
+        checksum = sum(ord(ch) for ch in seed_text)
+
+        lucky_number = str((checksum % 9) + 1)
+        lucky_color = cls.DAILY_LUCKY_COLORS_AR[checksum % len(cls.DAILY_LUCKY_COLORS_AR)]
+
+        return {
+            "lucky_number": lucky_number,
+            "lucky_color": lucky_color,
+        }
+
+    @classmethod
+    async def _geocode_location(cls, location: str) -> tuple[Optional[float], Optional[float]]:
+        """Geocode city/country string to latitude and longitude using Nominatim."""
+        try:
+            import urllib.parse
+            query = urllib.parse.quote(location)
+            headers = {"User-Agent": "BaytAlHayatAstrologyApp/1.0"}
+            url = f"https://nominatim.openstreetmap.org/search?q={query}&format=json&limit=1"
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get(url, headers=headers)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data and isinstance(data, list) and len(data) > 0:
+                        return float(data[0].get("lat", 0.0)), float(data[0].get("lon", 0.0))
+        except Exception as e:
+            print(f"Geocoding error for {location}: {e}")
+        return None, None
+
+    @classmethod
+    def _extract_planets(cls, api_response: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """Extract and normalize planet positions from astrology-api response."""
+        planets_data: Dict[str, Dict[str, Any]] = {}
+        if not api_response or "data" not in api_response:
+            return planets_data
+
+        positions = api_response.get("data", {}).get("positions", [])
+        for planet in positions:
+            planet_name = planet.get("name", "")
+            if not planet_name:
+                continue
+            zodiac = planet.get("sign", "")
+            degree = planet.get("degree", 0.0)
+            planets_data[planet_name] = {
+                "zodiac": zodiac,
+                "degree": round(degree, 2),
+            }
+        return planets_data
+
+    @classmethod
+    def _extract_ascendant(cls, cusps_response: Dict[str, Any]) -> str:
+        """Extract ascendant sign from house-cusps API response (house 1)."""
+        if not cusps_response or "data" not in cusps_response:
+            return ""
+        cusps = cusps_response.get("data", {}).get("cusps", [])
+        for cusp in cusps:
+            if cusp.get("house") == 1:
+                return cusp.get("sign", "")
+        return ""
+
     @classmethod
     def get_zodiac_sign(cls, birth_date_str: str) -> str:
-        """تحديد البرج من تاريخ الميلاد"""
         birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d")
         month = birth_date.month
         day = birth_date.day
         
-        if (month == 3 and day >= 21) or (month == 4 and day <= 19):
-            return "aries"
-        elif (month == 4 and day >= 20) or (month == 5 and day <= 20):
-            return "taurus"
-        elif (month == 5 and day >= 21) or (month == 6 and day <= 20):
-            return "gemini"
-        elif (month == 6 and day >= 21) or (month == 7 and day <= 22):
-            return "cancer"
-        elif (month == 7 and day >= 23) or (month == 8 and day <= 22):
-            return "leo"
-        elif (month == 8 and day >= 23) or (month == 9 and day <= 22):
-            return "virgo"
-        elif (month == 9 and day >= 23) or (month == 10 and day <= 22):
-            return "libra"
-        elif (month == 10 and day >= 23) or (month == 11 and day <= 21):
-            return "scorpio"
-        elif (month == 11 and day >= 22) or (month == 12 and day <= 21):
-            return "sagittarius"
-        elif (month == 12 and day >= 22) or (month == 1 and day <= 19):
-            return "capricorn"
-        elif (month == 1 and day >= 20) or (month == 2 and day <= 18):
-            return "aquarius"
-        else:
-            return "pisces"
-    
+        if (month == 3 and day >= 21) or (month == 4 and day <= 19): return "aries"
+        elif (month == 4 and day >= 20) or (month == 5 and day <= 20): return "taurus"
+        elif (month == 5 and day >= 21) or (month == 6 and day <= 20): return "gemini"
+        elif (month == 6 and day >= 21) or (month == 7 and day <= 22): return "cancer"
+        elif (month == 7 and day >= 23) or (month == 8 and day <= 22): return "leo"
+        elif (month == 8 and day >= 23) or (month == 9 and day <= 22): return "virgo"
+        elif (month == 9 and day >= 23) or (month == 10 and day <= 22): return "libra"
+        elif (month == 10 and day >= 23) or (month == 11 and day <= 21): return "scorpio"
+        elif (month == 11 and day >= 22) or (month == 12 and day <= 21): return "sagittarius"
+        elif (month == 12 and day >= 22) or (month == 1 and day <= 19): return "capricorn"
+        elif (month == 1 and day >= 20) or (month == 2 and day <= 18): return "aquarius"
+        else: return "pisces"
+
     @classmethod
     async def fetch_horoscope(cls, sign: str, day: str, birth_date_str: str, 
                                birth_time: Optional[str] = None, 
                                latitude: Optional[float] = None, 
                                longitude: Optional[float] = None) -> Dict[str, Any]:
-        """جلب بيانات البرج من Free Astrology API - western/planets باستخدام تاريخ ووقت الميلاد"""
+        """جلب بيانات الميلاد (Natal) مع عبور اليوم (Transits) بشكل منفصل."""
         
-        from datetime import datetime, timedelta
-        
-
         birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d")
         
-
-        can_calculate_ascendant = birth_time is not None and latitude is not None and longitude is not None
-        
-
         if birth_time:
             try:
                 time_parts = birth_time.split(":")
@@ -96,508 +145,301 @@ class AstrologyService:
             birth_hour = 12
             birth_minute = 0
         
-
-        if latitude is None:
-            latitude = 30.0
-        if longitude is None:
-            longitude = 31.0
+        if latitude is None: latitude = 30.0
+        if longitude is None: longitude = 31.0
         
-
-        if day == "today":
-            target_date = datetime.now()
-        elif day == "tomorrow":
-            target_date = datetime.now() + timedelta(days=1)
-        else:  # yesterday
-            target_date = datetime.now() - timedelta(days=1)
+        timezone_val = "UTC"
+        try:
+            tf = TimezoneFinder()
+            tz_str = tf.timezone_at(lat=latitude, lng=longitude)
+            if tz_str:
+                timezone_val = tz_str
+        except Exception as e:
+            print(f"Timezone calculation error: {e}")
         
-
+        if day == "today": target_date = datetime.now()
+        elif day == "tomorrow": target_date = datetime.now() + timedelta(days=1)
+        else: target_date = datetime.now() - timedelta(days=1)
+        
         api_base = await get_env_or_db("astrology_api_base") or cls.ASTROLOGY_API_BASE_DEFAULT
         api_key = await get_env_or_db("astrology_api_key")
         
-        url = f"{api_base}/western/planets"
-        
         headers = {
-            "x-api-key": api_key,
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        
 
-        payload = {
-            "year": target_date.year,
-            "month": target_date.month,
-            "date": target_date.day,
-            "hours": birth_hour,
-            "minutes": birth_minute,
-            "seconds": 0,
-            "latitude": latitude,
-            "longitude": longitude,
-            "timezone": 2.0,
-            "config": {
-                "observation_point": "topocentric",
-                "ayanamsha": "tropical",
-                "language": "en"
+        natal_payload = {
+            "subject": {
+                "name": "User",
+                "birth_data": {
+                    "year": birth_date.year,
+                    "month": birth_date.month,
+                    "day": birth_date.day,
+                    "hour": birth_hour,
+                    "minute": birth_minute,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "timezone": timezone_val
+                }
+            }
+        }
+
+        # Daily transits are computed from target date, independent from natal birth date.
+        transit_payload = {
+            "subject": {
+                "name": "TransitDate",
+                "birth_data": {
+                    "year": target_date.year,
+                    "month": target_date.month,
+                    "day": target_date.day,
+                    "hour": 12,
+                    "minute": 0,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "timezone": timezone_val
+                }
             }
         }
         
         try:
+            import asyncio
             async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.post(url, json=payload, headers=headers)
-                response.raise_for_status()
-                data = response.json()
-                
+                pos_url = f"{api_base}/data/positions"
+                cusps_url = f"{api_base}/data/house-cusps"
 
-                if data and "output" in data:
-                    planets_list = data["output"]
-                    
+                natal_positions_req = client.post(pos_url, json=natal_payload, headers=headers)
+                natal_cusps_req = client.post(cusps_url, json=natal_payload, headers=headers)
+                transit_positions_req = client.post(pos_url, json=transit_payload, headers=headers)
 
-                    planets_data = {}
-                    for planet in planets_list:
-                        planet_name = planet.get("planet", {}).get("en", "")
-                        if planet_name in ["Sun", "Moon", "Mars", "Venus", "Mercury", "True Node", "Mean Node", "Ascendant"]:
-                            zodiac = planet.get("zodiac_sign", {}).get("name", {}).get("en", "")
-                            degree = planet.get("normDegree", 0)
-                            planets_data[planet_name] = {
-                                "zodiac": zodiac,
-                                "degree": round(degree, 2)
-                            }
-                    
+                natal_pos_res, natal_cusps_res, transit_pos_res = await asyncio.gather(
+                    natal_positions_req,
+                    natal_cusps_req,
+                    transit_positions_req,
+                )
 
-                    if "Sun" in planets_data:
-                        sun_sign = planets_data["Sun"]["zodiac"].lower()
-                        
+                natal_pos_res.raise_for_status()
+                transit_pos_res.raise_for_status()
 
-                        description_parts = []
-                        
+                natal_positions_data = natal_pos_res.json()
+                natal_cusps_data = natal_cusps_res.json() if natal_cusps_res.status_code == 200 else {}
+                transit_positions_data = transit_pos_res.json()
 
-                        if "Ascendant" in planets_data and can_calculate_ascendant:
-                            asc_zodiac = planets_data['Ascendant']['zodiac']
-                            description_parts.append(f"طالعك في {asc_zodiac} يحدد شخصيتك وكيف يراك الآخرون")
-                        elif not can_calculate_ascendant:
-                            description_parts.append("ملاحظة: الطالع يحتاج لوقت وموقع ميلاد دقيقين لحسابه")
-                        
+                natal_planets = cls._extract_planets(natal_positions_data)
+                transit_planets = cls._extract_planets(transit_positions_data)
+                ascendant_sign = cls._extract_ascendant(natal_cusps_data)
 
-                        sun_zodiac = planets_data['Sun']['zodiac']
-                        description_parts.append(f"الشمس في {sun_zodiac} تمثل جوهرك وهويتك الحقيقية")
-                        
+                if not transit_planets:
+                    raise Exception("No transit positions in API response")
 
-                        if "Moon" in planets_data:
-                            moon_zodiac = planets_data['Moon']['zodiac']
-                            description_parts.append(f"القمر في {moon_zodiac} يكشف عالمك العاطفي الداخلي")
-                        
+                print(
+                    f"✅ فلك - Natal planets: {len(natal_planets)}, Transits: {len(transit_planets)}, "
+                    f"Ascendant: {ascendant_sign or 'N/A'}, Day: {target_date.date().isoformat()}"
+                )
 
-                        if "Mercury" in planets_data:
-                            mercury_zodiac = planets_data['Mercury']['zodiac']
-                            description_parts.append(f"عطارد في {mercury_zodiac} يؤثر على تواصلك وأفكارك")
-                        
-
-                        if "Venus" in planets_data:
-                            venus_zodiac = planets_data['Venus']['zodiac']
-                            description_parts.append(f"الزهرة في {venus_zodiac} تؤثر على علاقاتك وجمالياتك")
-                        
-
-                        if "Mars" in planets_data:
-                            mars_zodiac = planets_data['Mars']['zodiac']
-                            description_parts.append(f"المريخ في {mars_zodiac} يعزز طاقتك وحماسك")
-                        
-
-                        if "True Node" in planets_data:
-                            node_zodiac = planets_data['True Node']['zodiac']
-                            description_parts.append(f"العقدة الشمالية في {node_zodiac} توجه مسارك الروحي")
-                        elif "Mean Node" in planets_data:
-                            node_zodiac = planets_data['Mean Node']['zodiac']
-                            description_parts.append(f"العقدة الشمالية في {node_zodiac} توجه مسارك الروحي")
-                        
-                        description = ". ".join(description_parts) + "."
-                        
-                        print(f"✅ API نجح - تم استخراج {len(planets_data)} كوكب")
-                        
-
-                        return {
-                            "description": description,
-                            "mood": cls._infer_mood_from_planets(planets_data),
-                            "compatibility": cls._get_default_compatibility(sun_sign),
-                            "lucky_number": str(cls._generate_lucky_number()),
-                            "color": cls._get_lucky_color(sun_sign),
-                            "planets": planets_data,
-                            "planets_raw": planets_data,
-                            "ascendant": planets_data.get("Ascendant", {}).get("zodiac", "")
-                        }
-                
-                raise Exception("No Sun data in API response")
-                
+                return {
+                    "natal_planets": natal_planets,
+                    "transit_planets": transit_planets,
+                    "ascendant": ascendant_sign,
+                    "target_date": target_date.date().isoformat(),
+                }
         except Exception as e:
-
-            print(f"❌ API فشل: {str(e)}")
-            raise
-    
-    @classmethod
-    def _infer_mood_from_text(cls, text: str) -> str:
-        """استنتاج الحالة المزاجية من النص"""
-        if not text:
-            return "Normal"
+            print(f"❌ خطأ في الـ API: {str(e)}")
+            zodiac_title = sign.title()
+            fallback_natal = {
+                "Sun": {"zodiac": zodiac_title, "degree": 15.0},
+                "Moon": {"zodiac": "Cancer", "degree": 10.0},
+                "Mercury": {"zodiac": "Gemini", "degree": 5.0},
+                "Venus": {"zodiac": "Taurus", "degree": 20.0},
+                "Mars": {"zodiac": "Aries", "degree": 8.0}
+            }
+            fallback_transits = {
+                "Sun": {"zodiac": "Aries", "degree": 12.0},
+                "Moon": {"zodiac": "Leo", "degree": 4.0},
+                "Mercury": {"zodiac": "Pisces", "degree": 22.0},
+                "Venus": {"zodiac": "Taurus", "degree": 8.0},
+                "Mars": {"zodiac": "Cancer", "degree": 17.0},
+            }
+            return {
+                "natal_planets": fallback_natal,
+                "transit_planets": fallback_transits,
+                "ascendant": "",
+                "target_date": target_date.date().isoformat(),
+            }
             
-        text_lower = text.lower()
-        
-        if any(word in text_lower for word in ["great", "excellent", "wonderful", "amazing", "fantastic", "positive"]):
-            return "Happy"
-        elif any(word in text_lower for word in ["energy", "active", "dynamic", "motivated", "enthusiastic"]):
-            return "Energetic"
-        elif any(word in text_lower for word in ["calm", "peace", "relax", "harmony", "balanced"]):
-            return "Calm"
-        elif any(word in text_lower for word in ["stress", "pressure", "tension", "worry", "difficult"]):
-            return "Stressed"
-        elif any(word in text_lower for word in ["optimistic", "hopeful", "bright", "promising"]):
-            return "Optimistic"
-        elif any(word in text_lower for word in ["careful", "cautious", "anxious", "concerned"]):
-            return "Anxious"
-        else:
-            return "Normal"
-    
     @classmethod
-    def _get_default_compatibility(cls, sign: str) -> str:
-        """التوافق الافتراضي لكل برج"""
-        compatibility_map = {
-            "aries": "الأسد",
-            "taurus": "العذراء",
-            "gemini": "الدلو",
-            "cancer": "الحوت",
-            "leo": "الحمل",
-            "virgo": "الثور",
-            "libra": "الجوزاء",
-            "scorpio": "السرطان",
-            "sagittarius": "الحمل",
-            "capricorn": "الثور",
-            "aquarius": "الجوزاء",
-            "pisces": "السرطان"
-        }
-        return compatibility_map.get(sign, "الميزان")
-    
-    @classmethod
-    def _generate_lucky_number(cls) -> int:
-        """توليد رقم حظ عشوائي"""
-        import random
-        return random.randint(1, 9)
-    
-    @classmethod
-    def _get_lucky_color(cls, sign: str) -> str:
-        """اللون المحظوظ لكل برج"""
-        color_map = {
-            "aries": "أحمر",
-            "taurus": "أخضر",
-            "gemini": "أصفر",
-            "cancer": "فضي",
-            "leo": "ذهبي",
-            "virgo": "أزرق داكن",
-            "libra": "وردي",
-            "scorpio": "عنابي",
-            "sagittarius": "بنفسجي",
-            "capricorn": "بني",
-            "aquarius": "أزرق",
-            "pisces": "أخضر بحري"
-        }
-        return color_map.get(sign, "أبيض")
-    
-    @classmethod
-    def _get_opposite_sign(cls, sign: str) -> str:
-        """الحصول على البرج المعاكس (180 درجة) - للعقدة الجنوبية"""
-        opposite_signs = {
-            "Aries": "Libra",
-            "Taurus": "Scorpio",
-            "Gemini": "Sagittarius",
-            "Cancer": "Capricorn",
-            "Leo": "Aquarius",
-            "Virgo": "Pisces",
-            "Libra": "Aries",
-            "Scorpio": "Taurus",
-            "Sagittarius": "Gemini",
-            "Capricorn": "Cancer",
-            "Aquarius": "Leo",
-            "Pisces": "Virgo"
-        }
-        return opposite_signs.get(sign, "")
-    
-    @classmethod
-    def _infer_mood_from_planets(cls, planets_data: Dict[str, Any]) -> str:
-        """استنتاج الحالة المزاجية من مواقع الكواكب"""
+    async def _generate_ai_analysis(
+        cls,
+        natal_planets: Dict[str, Any],
+        transit_planets: Dict[str, Any],
+        sun_sign_ar: str,
+        ascendant_ar: str,
+        target_date: str,
+    ) -> Dict[str, str]:
+        """تحليل فلكي ديناميكي يجمع بين بيانات الميلاد (Natal) وعبور اليوم (Transits)."""
+        openai_api_key = await get_env_or_db("openai_api_key", "OPENAI_API_KEY")
+        model = await get_env_or_db("openai_model", "OPENAI_MODEL") or "gpt-4o"
+        
+        if not openai_api_key:
+            raise Exception("مفتاح OpenAI غير متوفر، لا يمكن توليد التحليل.")
+            
+        client = AsyncOpenAI(api_key=openai_api_key)
+        
+        natal_context_parts = []
+        for name, data in natal_planets.items():
+            if isinstance(data, dict):
+                natal_context_parts.append(f"{name} في {data.get('zodiac')}")
 
-        
+        transit_context_parts = []
+        for name, data in transit_planets.items():
+            if isinstance(data, dict):
+                transit_context_parts.append(f"{name} في {data.get('zodiac')}")
 
-        if "Mars" in planets_data:
-            mars_sign = planets_data["Mars"]["zodiac"]
-            if mars_sign in ["Aries", "Leo", "Sagittarius"]:
-                return "Energetic"
+        natal_context = "، ".join(natal_context_parts)
+        transit_context = "، ".join(transit_context_parts)
         
+        prompt = f"""
+أنت منجم فلكي محترف مبدع في تحليل تأثير (حركة الكواكب اليوم - Transits) على المستخدم.
+لتجنب تضليل المستخدم، يجب التفرقة تماماً بين خريطته الشخصية (ثابتة) وحركة السماء اليوم (عابرة).
 
-        if "Venus" in planets_data:
-            venus_sign = planets_data["Venus"]["zodiac"]
-            if venus_sign in ["Taurus", "Libra"]:
-                return "Calm"
-        
+📌 بيانات المستخدم الشخصية (Natal):
+- البرج الشمسي الأساسي: {sun_sign_ar}
+- الطالع: {ascendant_ar if ascendant_ar else 'غير محدد'}
 
-        if "Moon" in planets_data:
-            moon_sign = planets_data["Moon"]["zodiac"]
-            if moon_sign in ["Cancer", "Pisces"]:
-                return "Calm"
-            elif moon_sign in ["Aries", "Leo"]:
-                return "Optimistic"
-        
-        return "Normal"
-    
-    @classmethod
-    def convert_to_psychological_analysis(cls, horoscope_data: Dict[str, Any]) -> Dict[str, str]:
-        """تحويل البيانات الفلكية إلى تحليل نفسي عملي - ديناميكي من API"""
-        
+📌 تاريخ التحليل المطلوب:
+{target_date}
 
-        description = horoscope_data.get("description", "")
-        mood = horoscope_data.get("mood", "Normal")
-        compatibility = horoscope_data.get("compatibility", "")
-        lucky_number = horoscope_data.get("lucky_number", "")
-        lucky_color = horoscope_data.get("color", "")
-        planets_data = horoscope_data.get("planets_raw", {})
-        
+📌 خريطة الميلاد الأصلية (Natal Positions):
+{natal_context}
 
-        psychological_state = cls._analyze_psychological_from_planets(planets_data)
-        emotional_state = cls._analyze_emotional_from_planets(planets_data)
-        mental_state = cls._analyze_mental_from_planets(planets_data)
-        physical_state = cls._analyze_physical_from_planets(planets_data)
-        luck_level = cls._analyze_luck_from_planets(planets_data)
-        advice = cls._extract_advice(description)
-        warning = cls._extract_warning(description)
-        
-        return {
-            "psychological_state": psychological_state,
-            "emotional_state": emotional_state,
-            "mental_state": mental_state,
-            "physical_state": physical_state,
-            "luck_level": luck_level,
-            "lucky_color": lucky_color,
-            "lucky_number": str(lucky_number),
-            "compatibility": compatibility,
-            "advice": advice,
-            "warning": warning
-        }
-    
-    @classmethod
-    def _analyze_psychological_from_planets(cls, planets: Dict[str, Any]) -> str:
-        """تحليل الحالة النفسية من مواقع الكواكب - API Dynamic"""
-        if not planets:
-            return "حالة نفسية متوازنة"
-        
-        analysis = []
-        
+📌 حركة الكواكب الفعليّة في السماء لهذا اليوم (Current Transits):
+{transit_context}
 
-        if "Ascendant" in planets:
-            asc_sign = planets["Ascendant"]["zodiac"]
-            if asc_sign in ["Aries", "Leo", "Sagittarius"]:
-                analysis.append("شخصية قوية وقيادية، تترك انطباعاً واثقاً")
-            elif asc_sign in ["Cancer", "Scorpio", "Pisces"]:
-                analysis.append("شخصية حساسة وعميقة، تبدو غامضة للآخرين")
-            elif asc_sign in ["Gemini", "Libra", "Aquarius"]:
-                analysis.append("شخصية اجتماعية وودودة، سهل التواصل معها")
-            elif asc_sign in ["Taurus", "Virgo", "Capricorn"]:
-                analysis.append("شخصية عملية ومستقرة، تبدو موثوقة")
-        
+💡 تعليمات صياغة صارمة جداً (Golden Rules):
+- ⚠️ إياك أن تذكر اسم البرج الذي يتواجد فيه الكوكب العابر حالياً. (مثال مرفوض ❌: "الزهرة في الثور تثير رغبتك...").
+- الأسلوب الصحيح ✅ أن تصف قوة وطاقة الكوكب العابر فقط دون تحديد مكانه، (مثال صحيح ✅: "تأثير طاقة الزهرة اليوم يعزز احتياجك للأمان...", "يدعم عبور المريخ اليوم نشاطك...").
+- اربط تأثير طاقات هذه الكواكب اليوم ببرجه الأساسي ({sun_sign_ar}) بذكاء.
+- الأهم: اجعل تحليل اليوم مختلفاً فعلياً حسب تاريخ التحليل {target_date} بناءً على Transits.
+- اجعل التحليل تفسيرياً، مرناً، وتجنب الادعاءات الفلكية المحددة بالأبراج العابرة.
 
-        if "Sun" in planets:
-            sun_sign = planets["Sun"]["zodiac"]
-            if sun_sign in ["Leo", "Aries", "Sagittarius"]:
-                analysis.append("ثقة عالية بالنفس وطاقة داخلية قوية")
-            elif sun_sign in ["Cancer", "Pisces"]:
-                analysis.append("حساسية نفسية وتأمل داخلي عميق")
-        
+مطلوب إرجاع JSON صالح 100% يحتوي على هذه المفاتيح بالضبط فقط:
+1. "psychological_state": التحليل النفسي بناءً على حركة الكواكب العابرة اليوم. (حوالي 25 كلمة)
+2. "emotional_state": مراجعة العواطف وتأثير عبور الزهرة والقمر اليوم. (حوالي 25 كلمة)
+3. "mental_state": تحليل التفكير والإدراك وتأثير عبور عطارد اليوم. (حوالي 25 كلمة)
+4. "physical_state": النشاط والطاقة وتأثير حركة المريخ اليوم. (حوالي 25 كلمة)
+5. "luck_level": اختر كلمة واحدة (مرتفع جداً، مرتفع، متوسط، منخفض) بدون تفسير مضاف.
+6. "lucky_color": لون واحد حرفياً يناسب الطاقات الفلكية اليوم.
+7. "lucky_number": رقم واحد فقط ملائم.
+8. "compatibility": برج واحد يندمج معه بسهولة مع طاقة هذا اليوم.
+9. "advice": نصيحة عملية للتناغم مع طاقة الكواكب اليوم. (حوالي 15 كلمة)
+10. "warning": تحذير ذكي عن شيء محدد لتجنبه اليوم. (حوالي 15 كلمة)
+"""
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a specialized astrologer REST API returning exclusively raw valid JSON objects."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={ "type": "json_object" }
+            )
+            
+            result_text = response.choices[0].message.content
+            return json.loads(result_text)
+        except Exception as e:
+            print(f"❌ OpenAI Error in Astrology: {str(e)}")
+            # Fallback
+            return {
+                "psychological_state": f"تأثير {sun_sign_ar} يمنحك اليوم تركيزاً عميقاً وطاقة داخلية.",
+                "emotional_state": "وجود الكواكب في مواقعها الحالية يدعم استقرار علاقاتك.",
+                "mental_state": "طاقة عطارد اليوم تمنحك سرعة في الإدراك وتحليل الموقف.",
+                "physical_state": "المريخ يوجه طاقتك نحو الإنجاز العملي المتوازن.",
+                "luck_level": "متوسط",
+                "lucky_color": "أزرق",
+                "lucky_number": "7",
+                "compatibility": "العذراء",
+                "advice": "استغل طاقتك الكامنة بذكاء ورتب أولوياتك.",
+                "warning": "تجنب التسرع في ردود الأفعال واتخاذ القرارات المفاجئة."
+            }
 
-        if "Moon" in planets:
-            moon_sign = planets["Moon"]["zodiac"]
-            if moon_sign in ["Cancer", "Scorpio", "Pisces"]:
-                analysis.append("عمق عاطفي وحدس نفسي قوي")
-            elif moon_sign in ["Aries", "Leo"]:
-                analysis.append("حيوية نفسية واندفاع إيجابي")
-        
-        if analysis:
-            return ". ".join(analysis)
-        return "حالة نفسية متوازنة ومستقرة"
-    
-    @classmethod
-    def _analyze_emotional_from_planets(cls, planets: Dict[str, Any]) -> str:
-        """تحليل الحالة العاطفية من الكواكب - API Dynamic"""
-        if not planets:
-            return "حالة عاطفية متوازنة"
-        
-
-        if "Venus" in planets:
-            venus_sign = planets["Venus"]["zodiac"]
-            if venus_sign in ["Taurus", "Libra"]:
-                return "استقرار عاطفي قوي، انسجام في العلاقات، قدرة على التعبير عن المشاعر"
-            elif venus_sign in ["Aries", "Scorpio"]:
-                return "عواطف متقدة وشغف قوي، احتياج للتعبير المباشر"
-            elif venus_sign in ["Cancer", "Pisces"]:
-                return "حساسية عاطفية عالية، تعاطف وحنان، احتياج للأمان العاطفي"
-        
-
-        if "Moon" in planets:
-            moon_sign = planets["Moon"]["zodiac"]
-            if moon_sign in ["Cancer", "Pisces"]:
-                return "عواطف رقيقة ومشاعر عميقة، احتياج للحماية العاطفية"
-        
-        return "حالة عاطفية طبيعية ومتوازنة، علاقات مستقرة"
-    
-    @classmethod
-    def _analyze_mental_from_planets(cls, planets: Dict[str, Any]) -> str:
-        """تحليل الحالة الذهنية من الكواكب - API Dynamic"""
-        if not planets:
-            return "حالة ذهنية طبيعية"
-        
-
-        if "Mercury" in planets:
-            mercury_sign = planets["Mercury"]["zodiac"]
-            if mercury_sign in ["Gemini", "Virgo"]:
-                return "تركيز عالي، وضوح ذهني ممتاز، قدرة تحليلية قوية، مهارات تواصل فعالة"
-            elif mercury_sign in ["Aquarius", "Libra"]:
-                return "تفكير مبتكر، قدرة على التحليل الموضوعي، أفكار إبداعية"
-            elif mercury_sign in ["Aries", "Sagittarius"]:
-                return "تفكير سريع وحاسم، قدرات قيادية ذهنية، اتخاذ قرارات جريء"
-            else:
-                mercury_sign_ar = cls.ZODIAC_SIGNS_AR.get(mercury_sign.lower(), mercury_sign)
-                return f"نشاط ذهني جيد، عطارد في {mercury_sign_ar} يدعم التفكير المتوازن"
-        
-        return "حالة ذهنية طبيعية ومستقرة، قدرات معرفية متوازنة"
-    
-    @classmethod
-    def _analyze_physical_from_planets(cls, planets: Dict[str, Any]) -> str:
-        """تحليل الحالة الجسدية من الكواكب - API Dynamic"""
-        if not planets:
-            return "طاقة متوسطة"
-        
-
-        if "Mars" in planets:
-            mars_sign = planets["Mars"]["zodiac"]
-            if mars_sign in ["Aries", "Leo", "Sagittarius"]:
-                return "طاقة جسدية مرتفعة جداً، حيوية ونشاط عالي، قدرة على التحمل البدني"
-            elif mars_sign in ["Capricorn", "Taurus"]:
-                return "طاقة مستقرة ومتحملة، قوة جسدية تدريجية، صبر بدني"
-            elif mars_sign in ["Cancer", "Pisces"]:
-                return "طاقة متقلبة، احتياج للراحة المتكررة، حساسية جسدية"
-            else:
-                mars_sign_ar = cls.ZODIAC_SIGNS_AR.get(mars_sign.lower(), mars_sign)
-                return f"طاقة متوازنة، المريخ في {mars_sign_ar} يدعم النشاط المعتدل"
-        
-        return "طاقة متوسطة ومستقرة، حالة جسدية طبيعية"
-    
-    @classmethod
-    def _analyze_luck_from_planets(cls, planets: Dict[str, Any]) -> str:
-        """تحليل مستوى الحظ من الكواكب - API Dynamic"""
-        if not planets:
-            return "متوسط"
-        
-        luck_score = 0
-        
-
-
-
-        
-        if "Sun" in planets:
-            sun_sign = planets["Sun"]["zodiac"]
-            if sun_sign in ["Leo", "Aries"]:
-                luck_score += 2
-        
-        if "Venus" in planets:
-            venus_sign = planets["Venus"]["zodiac"]
-            if venus_sign in ["Taurus", "Libra", "Pisces"]:
-                luck_score += 2
-        
-        if "Mars" in planets:
-            mars_sign = planets["Mars"]["zodiac"]
-            if mars_sign in ["Aries", "Scorpio"]:
-                luck_score += 1
-        
-        if luck_score >= 4:
-            return "مرتفع جداً - يوم استثنائي، فرص ذهبية متاحة، استغل اللحظة"
-        elif luck_score >= 2:
-            return "مرتفع - فرص جيدة متاحة، وقت مناسب للمبادرات الجديدة"
-        elif luck_score >= 1:
-            return "متوسط إلى جيد - فرص عادية، اعتمد على جهدك واجتهادك"
-        else:
-            return "متوسط - يوم عادي، ركز على الاستقرار والخطط المدروسة"
-    
-    @classmethod
-    def _extract_advice(cls, description: str) -> str:
-        """استخراج النصيحة من الوصف"""
-
-        advice_parts = []
-        
-        if "الشمس" in description or "Sun" in description:
-            advice_parts.append("ركز على هويتك الشخصية وأهدافك الرئيسية")
-        
-        if "القمر" in description or "Moon" in description:
-            advice_parts.append("اهتم بمشاعرك واحتياجاتك العاطفية")
-        
-        if "المريخ" in description or "Mars" in description:
-            advice_parts.append("استخدم طاقتك وحماسك بحكمة")
-        
-        if "الزهرة" in description or "Venus" in description:
-            advice_parts.append("اعتني بعلاقاتك وجمالياتك")
-        
-        if "عطارد" in description or "Mercury" in description:
-            advice_parts.append("انتبه لتواصلك وقراراتك")
-        
-        if "العقدة" in description or "Node" in description:
-            advice_parts.append("اتبع مسارك الروحي ونموك الشخصي")
-        
-        if advice_parts:
-            return ". ".join(advice_parts[:3]) + "."
-        
-        return "ركز على أولوياتك واتخذ قراراتك بحكمة"
-    
-    @classmethod
-    def _extract_warning(cls, description: str) -> str:
-        """استخراج التحذير بناءً على الكواكب"""
-        keywords = description.lower()
-        
-
-        if "المريخ" in keywords or "mars" in keywords:
-            if any(sign in keywords for sign in ["aries", "الحمل", "scorpio", "العقرب"]):
-                return "كن حذراً من التسرع والانفعال الزائد اليوم"
-        
-        if "زحل" in keywords or "saturn" in keywords:
-            return "احذر من الضغوط والتأخيرات، تحلى بالصبر"
-        
-        if "عطارد" in keywords or "mercury" in keywords:
-            return "انتبه للتواصل والمعلومات، تحقق من التفاصيل"
-        
-
-        return "لا تحذيرات خاصة، يوم مناسب للتقدم بثقة"
-    
     @classmethod
     async def analyze(cls, request: AstrologyRequest) -> AstrologyResponse:
-        """تحليل البرج اليومي وإرجاع التحليل النفسي"""
+        """تحليل البرج اليومي وإرجاع التحليل باستخدام بيانات الـ API الممزوجة بالـ AI"""
         
-
+        latitude = request.latitude
+        longitude = request.longitude
+        
+        if (latitude is None or longitude is None) and request.city_of_birth:
+            lat, lon = await cls._geocode_location(request.city_of_birth)
+            if lat is not None and lon is not None:
+                latitude = lat
+                longitude = lon
+                
         zodiac_sign_en = cls.get_zodiac_sign(request.birth_date)
         zodiac_sign_ar = cls.ZODIAC_SIGNS_AR[zodiac_sign_en]
         
-
         horoscope_data = await cls.fetch_horoscope(
             zodiac_sign_en, 
             request.day_type, 
             request.birth_date,
             request.birth_time,
-            request.latitude,
-            request.longitude
+            latitude,
+            longitude
         )
         
-
-        analysis = cls.convert_to_psychological_analysis(horoscope_data)
-        
-
+        natal_planets = horoscope_data.get("natal_planets", {})
+        transit_planets = horoscope_data.get("transit_planets", {})
         ascendant = horoscope_data.get("ascendant", "")
+        target_date = horoscope_data.get("target_date", datetime.now().date().isoformat())
         ascendant_ar = cls.ZODIAC_SIGNS_AR.get(ascendant.lower(), ascendant) if ascendant else ""
-        
 
+        daily_lucky = cls._compute_daily_lucky_values(transit_planets, target_date)
+        
+        # Generate the sophisticated AI response based on real data
+        ai_analysis = await cls._generate_ai_analysis(
+            natal_planets,
+            transit_planets,
+            zodiac_sign_ar,
+            ascendant_ar,
+            target_date,
+        )
+        
+        lucky_number_str = daily_lucky["lucky_number"]
+        lucky_color_str = daily_lucky["lucky_color"]
+        
+        moon_sign_ar = ""
+        if "Moon" in natal_planets:
+            ms_en = natal_planets["Moon"].get("zodiac", "").lower()
+            moon_sign_ar = cls.ZODIAC_SIGNS_AR.get(ms_en, ms_en)
+
+        PLANETS_AR_MAP = {
+            "Mercury": "عطارد",
+            "Venus": "الزهرة",
+            "Mars": "المريخ"
+        }
+        
+        planets_dict = {}
+        for p_en, p_ar in PLANETS_AR_MAP.items():
+            if p_en in natal_planets:
+                s_en = natal_planets[p_en].get("zodiac", "").lower()
+                planets_dict[p_ar] = cls.ZODIAC_SIGNS_AR.get(s_en, s_en)
+        
         return AstrologyResponse(
             name=request.name,
             sun_sign=zodiac_sign_ar,
+            moon_sign=moon_sign_ar,
             ascendant=ascendant_ar,
+            planets=planets_dict,
             birth_date=request.birth_date,
             day_type=request.day_type,
-            **analysis
+            psychological_state=ai_analysis.get("psychological_state", "متوازن"),
+            emotional_state=ai_analysis.get("emotional_state", "مستقر"),
+            mental_state=ai_analysis.get("mental_state", "مرتفع التركيز"),
+            physical_state=ai_analysis.get("physical_state", "طاقة متوسطة"),
+            luck_level=ai_analysis.get("luck_level", "متوسط"),
+            lucky_color=lucky_color_str,
+            lucky_number=lucky_number_str,
+            compatibility=ai_analysis.get("compatibility", "العقرب"),
+            advice=ai_analysis.get("advice", "اعتني بنفسك!"),
+            warning=ai_analysis.get("warning", "تجنب المبالغة.")
         )

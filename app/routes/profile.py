@@ -21,7 +21,7 @@ async def get_profile(
         email=current_user.email,
         fullname=current_user.fullname,
         date_of_birth=current_user.date_of_birth,
-        place_of_birth=current_user.place_of_birth,
+        city_of_birth=current_user.city_of_birth,
         time_of_birth=current_user.time_of_birth,
         profile_picture_url=current_user.profile_picture_url
     )
@@ -45,7 +45,7 @@ async def update_profile_picture(
         email=current_user.email,
         fullname=current_user.fullname,
         date_of_birth=current_user.date_of_birth,
-        place_of_birth=current_user.place_of_birth,
+        city_of_birth=current_user.city_of_birth,
         time_of_birth=current_user.time_of_birth,
         profile_picture_url=current_user.profile_picture_url
     )
@@ -60,7 +60,7 @@ async def update_birth_details(
     تحديث بيانات الميلاد للمستخدم (مهمة لاختبار الفلك)
     """
     current_user.date_of_birth = request.date_of_birth
-    current_user.place_of_birth = request.place_of_birth
+    current_user.city_of_birth = request.city_of_birth
     current_user.time_of_birth = request.time_of_birth
     
     db.add(current_user)
@@ -72,7 +72,7 @@ async def update_birth_details(
         email=current_user.email,
         fullname=current_user.fullname,
         date_of_birth=current_user.date_of_birth,
-        place_of_birth=current_user.place_of_birth,
+        city_of_birth=current_user.city_of_birth,
         time_of_birth=current_user.time_of_birth,
         profile_picture_url=current_user.profile_picture_url
     )

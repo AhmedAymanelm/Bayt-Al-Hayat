@@ -4,6 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, field_validator
+from app.utils.date_parser import parse_date_input
 
 
 class UserRegisterRequest(BaseModel):
@@ -11,7 +12,7 @@ class UserRegisterRequest(BaseModel):
     password: str
     fullname: str
     date_of_birth: date
-    place_of_birth: str
+    city_of_birth: str
     time_of_birth: Optional[time] = None
     profile_picture_url: Optional[str] = None
 
@@ -31,7 +32,14 @@ class UserRegisterRequest(BaseModel):
     def validate_name(cls, v):
         if not v or len(v.strip()) < 2:
             raise ValueError("يجب أن يتكون الاسم من حرفين على الأقل")
+        if not re.match(r"^[\u0600-\u06FF\s]+$", v.strip()):
+            raise ValueError("يجب أن يكون الاسم باللغة العربية فقط")
         return v.strip()
+
+    @field_validator("date_of_birth", mode="before")
+    @classmethod
+    def normalize_date_of_birth(cls, v):
+        return parse_date_input(v)
 
 
 class UserResponse(BaseModel):
@@ -39,7 +47,7 @@ class UserResponse(BaseModel):
     email: str
     fullname: str
     date_of_birth: date
-    place_of_birth: str
+    city_of_birth: str
     time_of_birth: Optional[time] = None
     is_active: bool
     is_verified: bool
@@ -78,15 +86,17 @@ class ForgetPasswordResponse(BaseModel):
 
 
 class VerifyResetCodeRequest(BaseModel):
-    email: EmailStr
     verification_code: str
 
 
 class VerifyResetCodeResponse(BaseModel):
-    reset_token: str
+    is_valid: bool
+    message: str
 
 
 class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    verification_code: str
     new_password: str
 
     @field_validator("new_password")

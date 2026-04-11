@@ -19,7 +19,7 @@ class NeuroscienceQuestionnaireResponse(BaseModel):
 
 class NeuroscienceAnswersSubmission(BaseModel):
     """Answers submission model for neuroscience"""
-    answers: List[Literal["A", "B", "C", "D"]] = Field(..., min_length=9, max_length=9)
+    answers: List[Literal["A", "B", "C", "D"]] = Field(..., min_length=1)
     
     @field_validator('answers')
     @classmethod

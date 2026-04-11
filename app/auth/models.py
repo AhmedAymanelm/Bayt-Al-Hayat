@@ -16,7 +16,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     fullname = Column(String, nullable=False)
     date_of_birth = Column(Date, nullable=False)
-    place_of_birth = Column(String, nullable=False)
+    city_of_birth = Column(String, nullable=False)
     time_of_birth = Column(Time, nullable=True)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
