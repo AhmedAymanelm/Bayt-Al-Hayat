@@ -41,7 +41,6 @@ class AstrologyRequest(BaseModel):
         description="نوع اليوم المطلوب تحليله"
     )
     
-    @model_validator(mode="before")
     @field_validator('name')
     @classmethod
     def validate_name(cls, v: str) -> str:
