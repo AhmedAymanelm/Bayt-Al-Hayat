@@ -6,10 +6,14 @@ import os
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if not DATABASE_URL:
+    # Diagnostic print (safe version)
+    print("⚠️  DATABASE_URL not found in environment variables.")
     raise RuntimeError(
-        "❌ DATABASE_URL environment variable is required but not set. "
-        "Please configure it in your .env file."
+        "❌ DATABASE_URL is missing! \n"
+        "If you are on Railway/Heroku: Go to 'Variables' and add DATABASE_URL.\n"
+        "If you are Local: Check if your .env file exists and has DATABASE_URL=..."
     )
 
 engine = create_async_engine(
