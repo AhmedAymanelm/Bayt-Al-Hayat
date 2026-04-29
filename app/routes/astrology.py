@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth.models import User
 from app.auth.dependencies import get_current_user
-from app.auth.subscription import check_subscription_access
 from app.models.history import AssessmentHistory
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
@@ -23,7 +22,6 @@ async def analyze_daily_horoscope(
     request: AstrologyRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    _: bool = Depends(check_subscription_access),
 ):
     """
     تحليل البرج اليومي وإرجاع التحليل النفسي الشامل

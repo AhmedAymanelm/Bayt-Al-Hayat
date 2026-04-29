@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth.models import User
 from app.auth.dependencies import get_current_user
-from app.auth.subscription import check_subscription_access
 from app.models.history import AssessmentHistory
 
 from ..models.neuroscience import (
@@ -36,7 +35,6 @@ async def submit_neuroscience_answers(
     submission: NeuroscienceAnswersSubmission,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    _: bool = Depends(check_subscription_access),
 ):
     """
     Submit user answers and calculate neural pattern
