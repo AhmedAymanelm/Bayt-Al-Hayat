@@ -227,7 +227,7 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         "Content-Type": "application/json"
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             response = await client.post(f"{api_base}{endpoint}", json=payload, headers=headers)
             response.raise_for_status()
@@ -285,7 +285,7 @@ async def verify_payment(session_id: str, current_user: User = Depends(get_curre
         "Content-Type": "application/json"
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             response = await client.get(f"{api_base}/api/v2/getInvoiceData/{session_id}", headers=headers)
             response.raise_for_status()
