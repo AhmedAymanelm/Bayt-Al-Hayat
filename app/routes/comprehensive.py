@@ -7,12 +7,12 @@ import asyncio
 from app.database import get_db
 from app.auth.models import User
 from app.auth.dependencies import get_current_user
+from app.auth.subscription import check_subscription_access
 from app.models.history import AssessmentHistory
 from app.models.payment import PaymentRecord
 from sqlalchemy.future import select
 from ..models.comprehensive import ComprehensiveAnswers, ComprehensiveResult, ComprehensiveResultsInput
 from ..services.comprehensive_service import ComprehensiveService
-from ..services.ai_video_service import AIVideoService
 
 router = APIRouter(prefix="/comprehensive", tags=["comprehensive"])
 
@@ -21,7 +21,8 @@ router = APIRouter(prefix="/comprehensive", tags=["comprehensive"])
 async def submit_comprehensive_answers(
     submission: ComprehensiveAnswers,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(check_subscription_access),
 ):
     """
     Submit all assessment answers and get comprehensive analysis
@@ -60,41 +61,14 @@ async def submit_comprehensive_answers(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
-
-async def _background_video_generation(video_data: dict, neuro_pattern: str, zodiac_sign: str, report_result: dict, user_id, input_data: dict):
-    """Executes video generation in the background and saves history to the DB."""
-    try:
-        final_video_data = await AIVideoService.generate_full_video(
-            assessment_data=video_data,
-            output_dir="videos/comprehensive",
-            neuro_pattern=neuro_pattern,
-            zodiac_sign=zodiac_sign,
-            model="veo3.1_fast"
-        )
-        # Save to history once completed using a fresh DB session
-        from app.database import async_session_maker
-        from app.models.history import AssessmentHistory
-        async with async_session_maker() as fresh_db:
-            history_entry = AssessmentHistory(
-                user_id=user_id,
-                assessment_type="comprehensive",
-                input_data=input_data,
-                result_data={"analysis": video_data, "report": report_result, "video": final_video_data},
-                video_url=final_video_data.get("video_url") if isinstance(final_video_data, dict) else None
-            )
-            fresh_db.add(history_entry)
-            await fresh_db.commit()
-    except Exception as e:
-        print(f"Background Video Generation Failed for {zodiac_sign}/{neuro_pattern}: {e}")
-
 @router.post("/generate-video", response_model=Dict[str, Any])
 async def generate_comprehensive_report_and_video(
     submission: ComprehensiveAnswers,
     background_tasks: BackgroundTasks,
     payment_session_id: str = "test",
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(check_subscription_access),
 ):
     """
     1. Verifies Payment.
@@ -155,9 +129,6 @@ async def generate_comprehensive_report_and_video(
         neuro_pattern = video_data.get("neuroscience", {}).get("dominant")
         zodiac_sign = video_data.get("astrology", {}).get("sun_sign")
         
-        # 3. Check Cache
-        cached_video = await AIVideoService._get_cached_video(zodiac_sign, neuro_pattern)
-        
         # 4. Generate AI Text Report (Instantaneous ~10s)
         report_result = await ComprehensiveService.generate_comprehensive_report(
             name=submission.name,
@@ -167,26 +138,18 @@ async def generate_comprehensive_report_and_video(
             letter_result=submission.letter_result
         )
 
-        # 5. Handle Background Video or Immediate DB Save
-        if cached_video:
-            video_response = {"status": "ready", "video_url": cached_video.get("video_url")}
-            # Save history immediately since video is already ready
-            history_entry = AssessmentHistory(
-                user_id=current_user.id,
-                assessment_type="comprehensive",
-                input_data=submission.model_dump(),
-                result_data={"analysis": video_data, "report": report_result, "video": cached_video},
-                video_url=cached_video.get("video_url")
-            )
-            db.add(history_entry)
-            await db.commit()
-        else:
-            video_response = {"status": "generating", "video_url": None}
-            # Queue the video generation to process in the background
-            background_tasks.add_task(
-                _background_video_generation,
-                video_data, neuro_pattern, zodiac_sign, report_result, current_user.id, submission.model_dump()
-            )
+        # 5. Immediate DB Save (Video bypassed)
+        video_response = {"status": "skipped", "video_url": None}
+        
+        history_entry = AssessmentHistory(
+            user_id=current_user.id,
+            assessment_type="comprehensive",
+            input_data=submission.model_dump(),
+            result_data={"analysis": video_data, "report": report_result, "video": None},
+            video_url=None
+        )
+        db.add(history_entry)
+        await db.commit()
         
         return {
             "status": "success",
@@ -207,11 +170,7 @@ async def check_video_status(zodiac_sign: str, neuro_pattern: str):
     Endpoint for mobile apps to poll video generation status.
     Call this every 10 seconds if POST /generate-video returns video.status == 'generating'.
     """
-    cached_video = await AIVideoService._get_cached_video(zodiac_sign, neuro_pattern)
-    if cached_video:
-        return {"status": "ready", "video_url": cached_video.get("video_url")}
-    
-    return {"status": "generating", "video_url": None}
+    return {"status": "skipped", "video_url": None}
 
 
 
@@ -221,7 +180,8 @@ async def analyze_from_results(
     model: str = "gpt-4o",
     temperature: float = 0.8,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(check_subscription_access),
 ):
     """
     Generate comprehensive AI analysis report from pre-computed results.

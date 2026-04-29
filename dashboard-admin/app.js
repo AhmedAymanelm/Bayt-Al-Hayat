@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('🔘 Language toggle clicked');
       const current = localStorage.getItem('dashboard_lang') || 'en';
       const next = current === 'en' ? 'ar' : 'en';
-      
+
       if (typeof setLanguage === 'function') {
         setLanguage(next);
         // Reload page-specific elements if needed
@@ -243,27 +243,27 @@ function initCharts(stats, growth) {
         "comprehensive": "Comprehensive"
       };
 
-      const icons      = ['bx-text', 'bx-star', 'bx-brain', 'bx-network-chart', 'bx-trophy'];
+      const icons = ['bx-text', 'bx-star', 'bx-brain', 'bx-network-chart', 'bx-trophy'];
       const stageColors = ['#f59e0b', '#8b5cf6', '#6366f1', '#06b6d4', '#10b981'];
-      const stageBgs    = ['rgba(245,158,11,0.1)', 'rgba(139,92,246,0.1)', 'rgba(99,102,241,0.1)', 'rgba(6,182,212,0.1)', 'rgba(16,185,129,0.1)'];
+      const stageBgs = ['rgba(245,158,11,0.1)', 'rgba(139,92,246,0.1)', 'rgba(99,102,241,0.1)', 'rgba(6,182,212,0.1)', 'rgba(16,185,129,0.1)'];
 
       const counts = stageOrder.map(s => journeyData[s] || 0);
 
       let html = `<div style="display:flex;align-items:center;justify-content:space-between;overflow-x:auto;padding:1rem 0.5rem;gap:0.5rem;">`;
 
       stageOrder.forEach((stage, i) => {
-        const count  = counts[i];
-        const color  = stageColors[i];
-        const bg     = stageBgs[i];
+        const count = counts[i];
+        const color = stageColors[i];
+        const bg = stageBgs[i];
 
         // Retention rate: what % of previous stage users continued
         let arrowHtml = '';
         if (i > 0) {
-          const prev       = counts[i - 1];
-          const retention  = prev === 0 ? 100 : Math.round((count / prev) * 100);
-          const isGood     = retention === 100;
-          const color_a    = isGood ? '#10b981' : '#ef4444';
-          const icon_a     = isGood ? '▲' : '🔻';
+          const prev = counts[i - 1];
+          const retention = prev === 0 ? 100 : Math.round((count / prev) * 100);
+          const isGood = retention === 100;
+          const color_a = isGood ? '#10b981' : '#ef4444';
+          const icon_a = isGood ? '▲' : '🔻';
 
           arrowHtml = `
             <div style="display:flex;flex-direction:column;align-items:center;min-width:54px;flex-shrink:0;">
@@ -300,7 +300,7 @@ async function loadAiBalances() {
     const res = await apiFetch('/admin/settings/models/balances');
     if (!res) return;
     const balances = await res.json();
-    
+
     if (!balances || balances.length === 0) {
       container.innerHTML = '<div style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">No AI models configured.</div>';
       return;
@@ -308,7 +308,6 @@ async function loadAiBalances() {
 
     const icons = {
       'OpenAI': 'bx-message-square-dots',
-      'RunwayML': 'bx-film',
       'Cloudinary': 'bx-cloud-upload',
       'Astrology API': 'bx-planet'
     };
@@ -335,7 +334,7 @@ async function loadAiBalances() {
         </div>
       `;
     }).join('');
-    
+
   } catch (err) {
     container.innerHTML = '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Failed to load AI balances.</div>';
   }

@@ -6,7 +6,7 @@ from ..models.astrology import AstrologyRequest
 from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
-from app.utils.settings_helper import get_env_or_db
+from app.utils.settings_helper import get_env_or_db, get_random_setting_item
 
 load_dotenv()
 
@@ -31,6 +31,9 @@ class ComprehensiveService:
         psychology_result = PsychologyService.calculate_assessment(psychology_answers)
         
         neuroscience_result = NeuroscienceService.calculate_assessment(neuroscience_answers)
+        
+        base_pattern = neuroscience_result.dominant.replace("Mixed ", "").split("/")[0].strip()
+        music_url = await get_random_setting_item(f"neuro_music_{base_pattern.lower()}")
         
         astrology_request = AstrologyRequest(
             name=name,
@@ -59,6 +62,7 @@ class ComprehensiveService:
                 "secondary": neuroscience_result.secondary,
                 "strong_secondary": neuroscience_result.strong_secondary,
                 "description": neuroscience_result.description,
+                "background_music_url": music_url,
                 "scores": {
                     "Fight": neuroscience_result.scores.A,
                     "Flight": neuroscience_result.scores.B,

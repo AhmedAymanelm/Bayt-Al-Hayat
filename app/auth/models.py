@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, Boolean, Date, Time, DateTime
+from sqlalchemy import Column, String, Boolean, Date, Time, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -21,6 +21,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
+    free_trial_used = Column(Boolean, default=False)  # تجربة مجانية واحدة فقط
     profile_picture_url = Column(String, nullable=True)
     verification_code = Column(String(6), nullable=True)
     verification_code_expires_at = Column(DateTime, nullable=True)

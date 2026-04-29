@@ -42,7 +42,6 @@ async def init_db():
     from app.models.history import AssessmentHistory
     from app.models.payment import PaymentRecord
     from app.models.settings import SystemSetting
-    from app.models.video_cache import VideoCache
     from app.models.question import AssessmentQuestion
 
     async with engine.begin() as conn:

@@ -18,7 +18,9 @@ _MONTH_MAP = {
 }
 
 
-def parse_date_input(value: str | date) -> date:
+from typing import Union
+
+def parse_date_input(value: Union[str, date]) -> date:
     """Parse a date input and support formats with English month abbreviations."""
     if isinstance(value, date):
         return value
@@ -66,6 +68,6 @@ def parse_date_input(value: str | date) -> date:
     raise ValueError("Date must be YYYY-MM-DD or include month like Jan")
 
 
-def normalize_date_input(value: str | date) -> str:
+def normalize_date_input(value: Union[str, date]) -> str:
     """Normalize an input date to ISO format YYYY-MM-DD."""
     return parse_date_input(value).isoformat()

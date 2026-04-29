@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, extract
 from typing import List, Dict, Any, Optional
@@ -207,6 +207,8 @@ async def get_users(
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
+    from app.models.subscription import UserSubscription
+    
     result = await db.execute(select(User).order_by(User.created_at.desc()).offset(skip).limit(limit))
     users = result.scalars().all()
 
@@ -218,6 +220,18 @@ async def get_users(
         .group_by(AssessmentHistory.user_id)
     )
     counts_map = {str(row[0]): row[1] for row in counts_result.all()}
+    
+    # Get active subscriptions
+    now = datetime.utcnow()
+    subs_result = await db.execute(
+        select(UserSubscription.user_id)
+        .where(
+            UserSubscription.user_id.in_(user_ids),
+            UserSubscription.is_active == True,
+            UserSubscription.expires_at > now
+        )
+    )
+    active_sub_users = {str(uid) for uid in subs_result.scalars().all()}
 
     return [
         {
@@ -225,12 +239,14 @@ async def get_users(
             "email": u.email,
             "fullname": u.fullname,
             "date_of_birth": str(u.date_of_birth) if u.date_of_birth else None,
-            "place_of_birth": u.place_of_birth,
+            "place_of_birth": u.city_of_birth,
             "is_active": u.is_active,
             "is_verified": u.is_verified,
             "profile_picture_url": u.profile_picture_url,
             "created_at": u.created_at,
-            "assessment_count": counts_map.get(str(u.id), 0)
+            "assessment_count": counts_map.get(str(u.id), 0),
+            "free_trial_used": u.free_trial_used,
+            "has_active_subscription": str(u.id) in active_sub_users
         }
         for u in users
     ]
@@ -259,7 +275,7 @@ async def get_user_details(
         "email": user.email,
         "fullname": user.fullname,
         "date_of_birth": str(user.date_of_birth) if user.date_of_birth else None,
-        "place_of_birth": user.place_of_birth,
+        "place_of_birth": user.city_of_birth,
         "time_of_birth": str(user.time_of_birth) if user.time_of_birth else None,
         "is_active": user.is_active,
         "is_verified": user.is_verified,
@@ -529,6 +545,105 @@ async def get_system_health(
         "checked_at": datetime.utcnow().isoformat()
     }
 
+# ─── Pattern Music Management ──────────────────────────────────────────────────
+
+from app.utils.cloudinary_upload import upload_audio_to_cloudinary
+
+@router.get("/settings/neuro-music", summary="Get current music URLs for neural patterns")
+async def get_neuro_music_settings(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Retrieve all stored Cloudinary background music URLs for patterns."""
+    keys = ["neuro_music_fight", "neuro_music_flight", "neuro_music_freeze", "neuro_music_fawn"]
+    result = await db.execute(select(SystemSetting).where(SystemSetting.key.in_(keys)))
+    settings = result.scalars().all()
+    
+    settings_dict = {s.key: s.value for s in settings}
+    return [
+        {"pattern": "Fight", "urls": [u.strip() for u in settings_dict.get("neuro_music_fight", "").split(",") if u.strip()]},
+        {"pattern": "Flight", "urls": [u.strip() for u in settings_dict.get("neuro_music_flight", "").split(",") if u.strip()]},
+        {"pattern": "Freeze", "urls": [u.strip() for u in settings_dict.get("neuro_music_freeze", "").split(",") if u.strip()]},
+        {"pattern": "Fawn", "urls": [u.strip() for u in settings_dict.get("neuro_music_fawn", "").split(",") if u.strip()]},
+    ]
+
+
+@router.post("/settings/neuro-music/upload", summary="Upload music for a neural pattern")
+async def upload_neuro_music(
+    pattern: str = Form(...),
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Uploads an audio file to Cloudinary and saves URL in settings"""
+    if pattern not in ["Fight", "Flight", "Freeze", "Fawn"]:
+        raise HTTPException(status_code=400, detail="Invalid pattern name")
+        
+    if not file.content_type.startswith("audio/") and not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="Invalid file type. Must be an audio file.")
+        
+    try:
+        # Upload to Cloudinary
+        secure_url = await upload_audio_to_cloudinary(file, folder="neuro_patterns_music")
+        
+        # Save to DB
+        setting_key = f"neuro_music_{pattern.lower()}"
+        result = await db.execute(select(SystemSetting).where(SystemSetting.key == setting_key))
+        setting = result.scalar_one_or_none()
+        
+        if setting:
+            # Append if not empty, otherwise set
+            current_values = [v.strip() for v in setting.value.split(",") if v.strip()]
+            if secure_url not in current_values:
+                current_values.append(secure_url)
+            setting.value = ",".join(current_values)
+            setting.updated_at = datetime.utcnow()
+        else:
+            setting = SystemSetting(
+                key=setting_key,
+                value=secure_url,
+                group="multimedia",
+                label=f"Neuro Science Music: {pattern}",
+                description=f"Background music URL for {pattern} pattern",
+                is_secret=False
+            )
+            db.add(setting)
+            
+        await db.commit()
+        return {"message": f"Successfully uploaded music for {pattern}", "url": secure_url}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/settings/neuro-music/{pattern}", summary="Delete music for a neural pattern")
+async def delete_neuro_music(
+    pattern: str,
+    url: str = None,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    if pattern not in ["Fight", "Flight", "Freeze", "Fawn"]:
+        raise HTTPException(status_code=400, detail="Invalid pattern name")
+        
+    setting_key = f"neuro_music_{pattern.lower()}"
+    result = await db.execute(select(SystemSetting).where(SystemSetting.key == setting_key))
+    setting = result.scalar_one_or_none()
+    
+    if setting:
+        if url:
+            # Delete specific URL
+            current_values = [v.strip() for v in setting.value.split(",") if v.strip()]
+            if url in current_values:
+                current_values.remove(url)
+            setting.value = ",".join(current_values)
+        else:
+            # Delete all
+            setting.value = ""
+            
+        setting.updated_at = datetime.utcnow()
+        await db.commit()
+        
+    return {"message": f"Successfully updated music list for {pattern}"}
 
 # ─── Admin User Management ─────────────────────────────────────────────────────
 
@@ -797,12 +912,6 @@ async def get_ai_models_balances(
     else:
         add_bal("OpenAI", "Not Configured", "error")
 
-    # RunwayML
-    runway_key = settings_dict.get("runway_api_key")
-    if runway_key:
-        add_bal("RunwayML", "Check Dashboard", "warning")
-    else:
-            add_bal("RunwayML", "Not Configured", "error")
 
     # Astrology API
     astro_key = settings_dict.get("astrology_api_key")
@@ -1076,3 +1185,166 @@ async def reorder_questions(
 
     await db.commit()
     return {"message": f"✅ {assessment_type} questions reordered successfully"}
+
+
+# ─── Subscription Management (Admin) ──────────────────────────────────────────
+
+from app.models.subscription import UserSubscription
+
+
+@router.get("/subscriptions", summary="Get all user subscriptions")
+async def get_all_subscriptions(
+    skip: int = 0,
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """List all subscriptions with user info, sorted by newest first."""
+    result = await db.execute(
+        select(UserSubscription, User.email.label("user_email"), User.fullname)
+        .join(User, UserSubscription.user_id == User.id)
+        .order_by(UserSubscription.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    items = result.all()
+    now = datetime.utcnow()
+
+    return [
+        {
+            "id": str(item.UserSubscription.id),
+            "user_id": str(item.UserSubscription.user_id),
+            "user_email": item.user_email,
+            "user_name": item.fullname,
+            "plan_type": item.UserSubscription.plan_type,
+            "is_active": item.UserSubscription.is_active,
+            "granted_by_admin": item.UserSubscription.granted_by_admin,
+            "started_at": item.UserSubscription.started_at.isoformat() if item.UserSubscription.started_at else None,
+            "expires_at": item.UserSubscription.expires_at.isoformat() if item.UserSubscription.expires_at else None,
+            "days_remaining": max(0, (item.UserSubscription.expires_at - now).days) if item.UserSubscription.expires_at else 0,
+            "is_expired": item.UserSubscription.expires_at < now if item.UserSubscription.expires_at else True,
+            "payment_record_id": str(item.UserSubscription.payment_record_id) if item.UserSubscription.payment_record_id else None,
+            "created_at": item.UserSubscription.created_at.isoformat() if item.UserSubscription.created_at else None,
+        }
+        for item in items
+    ]
+
+
+@router.post("/users/{user_id}/grant-subscription", summary="Grant a free 30-day subscription")
+async def grant_subscription(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Admin manually grants a 30-day subscription without requiring payment."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    now = datetime.utcnow()
+    sub = UserSubscription(
+        user_id=user.id,
+        payment_record_id=None,
+        started_at=now,
+        expires_at=now + timedelta(days=30),
+        is_active=True,
+        plan_type="admin_grant",
+        granted_by_admin=True,
+    )
+    db.add(sub)
+    await db.commit()
+
+    return {
+        "message": f"✅ Subscription granted to {user.fullname} ({user.email}) — expires in 30 days",
+        "expires_at": sub.expires_at.isoformat()
+    }
+
+
+@router.post("/users/{user_id}/revoke-subscription", summary="Revoke all active subscriptions for a user")
+async def revoke_subscription(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Marks all active subscriptions for a user as inactive immediately."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    subs_result = await db.execute(
+        select(UserSubscription).where(
+            UserSubscription.user_id == user_id,
+            UserSubscription.is_active == True,
+        )
+    )
+    subs = subs_result.scalars().all()
+
+    if not subs:
+        raise HTTPException(status_code=404, detail="No active subscriptions found for this user")
+
+    for sub in subs:
+        sub.is_active = False
+        sub.expires_at = datetime.utcnow()
+
+    await db.commit()
+    return {"message": f"❌ All active subscriptions revoked for {user.fullname} ({user.email})"}
+
+
+@router.post("/users/{user_id}/reset-free-trial", summary="Reset the free trial for a user")
+async def reset_free_trial(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Resets free_trial_used so the user gets another free analysis attempt."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.free_trial_used = False
+    await db.commit()
+    return {"message": f"✅ Free trial reset for {user.fullname} ({user.email})"}
+
+
+@router.get("/subscriptions/stats", summary="Get subscription statistics")
+async def get_subscription_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Returns aggregate subscription metrics for the admin dashboard."""
+    from sqlalchemy import func
+    now = datetime.utcnow()
+
+    total_active = (await db.execute(
+        select(func.count(UserSubscription.id)).where(
+            UserSubscription.is_active == True,
+            UserSubscription.expires_at > now,
+        )
+    )).scalar_one_or_none() or 0
+
+    total_ever = (await db.execute(
+        select(func.count(UserSubscription.id))
+    )).scalar_one_or_none() or 0
+
+    admin_granted = (await db.execute(
+        select(func.count(UserSubscription.id)).where(
+            UserSubscription.granted_by_admin == True,
+            UserSubscription.is_active == True,
+            UserSubscription.expires_at > now,
+        )
+    )).scalar_one_or_none() or 0
+
+    trials_used = (await db.execute(
+        select(func.count(User.id)).where(User.free_trial_used == True)
+    )).scalar_one_or_none() or 0
+
+    return {
+        "total_active_subscriptions": total_active,
+        "total_subscriptions_ever": total_ever,
+        "admin_granted_active": admin_granted,
+        "paid_active": total_active - admin_granted,
+        "users_with_trial_used": trials_used,
+    }

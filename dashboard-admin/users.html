@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,45 +9,255 @@
   <link rel="stylesheet" href="styles.css?v=4" />
   <script src="i18n.js?v=3"></script>
   <style>
-    .table-card { background: var(--bg-surface); border-radius: 8px; padding: 1.5rem; border: 1px solid var(--border-color); overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .data-table th { padding: 0.875rem 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border-color); text-transform: uppercase; letter-spacing: 0.05em; }
-    .data-table td { padding: 0.875rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
-    .data-table tbody tr:hover { background: var(--bg-body); }
-    .badge { padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; display: inline-block; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-danger { background: #fee2e2; color: #991b1b; }
-    .badge-gray { background: #f3f4f6; color: #4b5563; }
-    .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
-    .search-box { position: relative; min-width: 260px; }
-    .search-box i { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-    .search-box input { padding-left: 2.4rem; width: 100%; }
-    .btn-sm { padding: 0.3rem 0.65rem; border-radius: 5px; border: 1px solid; font-size: 0.78rem; cursor: pointer; font-weight: 500; transition: all 0.15s; }
-    .btn-info { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
-    .btn-info:hover { background: #bfdbfe; }
-    .btn-warn { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-    .btn-warn:hover { background: #fde68a; }
-    .btn-del { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
-    .btn-del:hover { background: #fecaca; }
-    .actions-cell { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; margin-right: 0.5rem; font-weight: 600; }
+    .table-card {
+      background: var(--bg-surface);
+      border-radius: 8px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      padding: 0.875rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-body);
+    }
+
+    .badge {
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-gray {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-box input {
+      padding-left: 2.4rem;
+      width: 100%;
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.65rem;
+      border-radius: 5px;
+      border: 1px solid;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .btn-info {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .btn-info:hover {
+      background: #bfdbfe;
+    }
+
+    .btn-warn {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .btn-warn:hover {
+      background: #fde68a;
+    }
+
+    .btn-del {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .btn-del:hover {
+      background: #fecaca;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .avatar-sm {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      font-weight: 600;
+    }
+
     /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
-    .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--bg-surface); border-radius: 12px; padding: 2rem; width: 620px; max-width: 95vw; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative; }
-    .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
-    .modal-close:hover { color: var(--text-main); }
-    .user-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
-    .detail-field { background: var(--bg-body); border-radius: 6px; padding: 0.65rem 0.875rem; }
-    .detail-field label { display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.2rem; text-transform: uppercase; }
-    .detail-field span { font-size: 0.875rem; color: var(--text-main); font-weight: 500; }
-    .assess-list { margin-top: 1rem; }
-    .assess-item { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.875rem; border-radius: 6px; background: var(--bg-body); margin-bottom: 0.4rem; font-size: 0.825rem; }
-    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-    .empty-state i { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
-    .stats-row { font-size: 0.8rem; color: var(--text-muted); }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 620px;
+      max-width: 95vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+    }
+
+    .user-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .detail-field {
+      background: var(--bg-body);
+      border-radius: 6px;
+      padding: 0.65rem 0.875rem;
+    }
+
+    .detail-field label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+      text-transform: uppercase;
+    }
+
+    .detail-field span {
+      font-size: 0.875rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .assess-list {
+      margin-top: 1rem;
+    }
+
+    .assess-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.875rem;
+      border-radius: 6px;
+      background: var(--bg-body);
+      margin-bottom: 0.4rem;
+      font-size: 0.825rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .stats-row {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
   </style>
 </head>
+
 <body>
   <div class="app-layout">
 
@@ -54,16 +265,21 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo" data-i18n="sidebar-logo">Bayt Al Hayat</div>
       <nav class="nav-menu">
-        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span
+            data-i18n="nav-dashboard">Dashboard</span></a>
         <div class="nav-divider"></div>
-        <a href="users.html" class="nav-item active"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
-        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
-        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> <span data-i18n="nav-videos">Videos</span></a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
+        <a href="users.html" class="nav-item active"><i class='bx bx-group'></i> <span
+            data-i18n="nav-users">Users</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span
+            data-i18n="nav-assessments">Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span
+            data-i18n="nav-payments">Payments</span></a>
         <div class="nav-divider"></div>
-        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span
+            data-i18n="nav-settings">Settings</span></a>
         <div class="nav-divider"></div>
-        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span
+            data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
@@ -75,13 +291,16 @@
         <div class="header-right">
           <button class="btn-icon" id="toggleLanguage" title="Switch Language"><span>عربي</span></button>
           <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
-          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+          <div class="user-profile">
+            <div class="avatar"><i class='bx bx-user'></i></div>
+          </div>
         </div>
       </header>
 
       <div class="dashboard-body">
         <div class="dashboard-header-info">
-          <div class="breadcrumb"><strong data-i18n="breadcrumb-users">Users</strong> <span>|</span> <span data-i18n="breadcrumb-mgmt">User Management</span></div>
+          <div class="breadcrumb"><strong data-i18n="breadcrumb-users">Users</strong> <span>|</span> <span
+              data-i18n="breadcrumb-mgmt">User Management</span></div>
           <div id="statsRow" class="stats-row">Loading...</div>
         </div>
 
@@ -90,7 +309,8 @@
             <h2 style="font-size: 1.1rem; font-weight: 600;" data-i18n="users-title">All Users</h2>
             <div class="search-box">
               <i class='bx bx-search'></i>
-              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email..." oninput="filterUsers()" data-i18n="users-search-placeholder">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or email..."
+                oninput="filterUsers()" data-i18n="users-search-placeholder">
             </div>
           </div>
 
@@ -101,13 +321,16 @@
                 <th data-i18n="table-email">Email</th>
                 <th data-i18n="table-birth">Birth Info</th>
                 <th data-i18n="table-assessments">Assessments</th>
+                <th>Subscription</th>
                 <th data-i18n="table-joined">Joined</th>
                 <th data-i18n="table-status">Status</th>
                 <th data-i18n="table-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
-              <tr><td colspan="7" class="empty-state"><i class='bx bx-loader-alt bx-spin'></i>Loading users...</td></tr>
+              <tr>
+                <td colspan="7" class="empty-state"><i class='bx bx-loader-alt bx-spin'></i>Loading users...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -125,7 +348,8 @@
       <div class="user-detail-grid" id="modalDetails"></div>
 
       <div class="assess-list">
-        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">ASSESSMENTS HISTORY</h4>
+        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">ASSESSMENTS
+          HISTORY</h4>
         <div id="modalAssessments"></div>
       </div>
     </div>
@@ -180,7 +404,7 @@
     function renderUsers(users) {
       const tbody = document.getElementById('usersTableBody');
       if (!users.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class='bx bx-ghost'></i>No users found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class='bx bx-ghost'></i>No users found.</td></tr>`;
         return;
       }
       tbody.innerHTML = users.map(u => {
@@ -191,6 +415,15 @@
           : `<span class="badge badge-danger">Inactive</span>`;
         const date = u.created_at ? new Date(u.created_at).toLocaleDateString() : '—';
         const birthInfo = [u.date_of_birth, u.place_of_birth].filter(Boolean).join(' · ') || '—';
+        
+        let subBadge = '';
+        if (u.has_active_subscription) {
+            subBadge = '<span class="badge badge-success" style="background:#dcfce7;color:#166534;"><i class="bx bx-check-circle"></i> Subscribed</span>';
+        } else if (!u.free_trial_used) {
+            subBadge = '<span class="badge" style="background:#fef3c7;color:#92400e;"><i class="bx bx-gift"></i> Trial Avail</span>';
+        } else {
+            subBadge = '<span class="badge badge-danger" style="background:#fee2e2;color:#991b1b;"><i class="bx bx-x-circle"></i> No Sub</span>';
+        }
 
         return `
           <tr>
@@ -198,16 +431,19 @@
             <td>${u.email}</td>
             <td style="font-size:0.8rem;color:var(--text-muted);">${birthInfo}</td>
             <td><span class="badge badge-gray">${u.assessment_count}</span></td>
+            <td>${subBadge}</td>
             <td style="font-size:0.8rem;color:var(--text-muted);">${date}</td>
             <td>${statusBadge}</td>
             <td>
               <div class="actions">
-                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')"><i class='bx bx-show'></i> <span data-i18n="action-view">View</span></button>
-                ${u.is_active 
-                  ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', false)"><i class='bx bx-block'></i> <span data-i18n="action-block">Block</span></button>`
-                  : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', true)"><i class='bx bx-check'></i> <span data-i18n="action-activate">Activate</span></button>`
-                }
-                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')"><i class='bx bx-trash'></i> <span data-i18n="action-delete">Delete</span></button>
+                <button class="btn-sm btn-info" onclick="viewUser('${u.id}')" title="View"><i class='bx bx-show'></i></button>
+                <button class="btn-sm btn-info" style="background:#d1fae5;color:#065f46;border-color:#a7f3d0;" onclick="grantSub('${u.id}', '${name}')" title="Grant Subscription"><i class='bx bx-star'></i></button>
+                <button class="btn-sm btn-warn" onclick="resetTrial('${u.id}', '${name}')" title="Reset Trial"><i class='bx bx-reset'></i></button>
+                ${u.is_active
+            ? `<button class="btn-sm btn-warn" onclick="toggleStatus('${u.id}', '${name}')" title="Block"><i class='bx bx-block'></i></button>`
+            : `<button class="btn-sm btn-info" onclick="toggleStatus('${u.id}', '${name}')" title="Activate"><i class='bx bx-check'></i></button>`
+          }
+                <button class="btn-sm btn-del" onclick="deleteUser('${u.id}', '${name}')" title="Delete"><i class='bx bx-trash'></i></button>
               </div>
             </td>
           </tr>
@@ -256,6 +492,24 @@
       if (e.target === e.currentTarget) closeModal();
     });
 
+    async function grantSub(userId, name) {
+      if (!confirm(`Grant a free 30-day subscription to ${name}?`)) return;
+      const res = await apiFetch(`/admin/users/${userId}/grant-subscription`, { method: 'POST' });
+      if (res && res.ok) {
+        alert('Subscription granted successfully.');
+        fetchUsers();
+      } else alert('Failed to grant subscription.');
+    }
+
+    async function resetTrial(userId, name) {
+      if (!confirm(`Reset the free trial for ${name}?`)) return;
+      const res = await apiFetch(`/admin/users/${userId}/reset-free-trial`, { method: 'POST' });
+      if (res && res.ok) {
+        alert('Free trial reset successfully.');
+        fetchUsers();
+      } else alert('Failed to reset free trial.');
+    }
+
     async function toggleStatus(userId, name) {
       if (!confirm(`Toggle active status for ${name}?`)) return;
       const res = await apiFetch(`/admin/users/${userId}/toggle-status`, { method: 'POST' });
@@ -271,4 +525,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,86 +10,403 @@
   <script src="i18n.js?v=3"></script>
   <style>
     /* KPI Cards Row */
-    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem; }
-    .kpi-mini { background: var(--bg-surface); border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid var(--border-color); }
-    .kpi-mini .kpi-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
-    .kpi-mini .kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--text-main); line-height: 1; }
-    .kpi-mini .kpi-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .kpi-mini {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .kpi-mini .kpi-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-mini .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1;
+    }
+
+    .kpi-mini .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
     /* Journey Table */
-    .journey-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    .journey-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); font-weight: 600; background: var(--bg-body); }
-    .journey-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: var(--text-main); }
-    .journey-table tr:last-child td { border-bottom: none; }
-    .journey-table tr:hover td { background: rgba(99,102,241,0.04); }
+    .journey-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .journey-table th {
+      text-align: left;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+      background: var(--bg-body);
+    }
+
+    .journey-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+      color: var(--text-main);
+    }
+
+    .journey-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .journey-table tr:hover td {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
     /* Stage Checkmarks */
-    .stages-row { display: flex; align-items: center; gap: 6px; }
-    .stage-chip { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; position: relative; }
-    .stage-chip.done { background: #d1fae5; }
-    .stage-chip.done i { color: #059669; }
-    .stage-chip.todo { background: var(--bg-body); border: 1.5px dashed var(--border-color); }
-    .stage-chip.todo i { color: var(--text-muted); opacity: 0.5; }
-    .stage-arrow { color: var(--border-color); font-size: 0.85rem; }
+    .stages-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stage-chip {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .stage-chip.done {
+      background: #d1fae5;
+    }
+
+    .stage-chip.done i {
+      color: #059669;
+    }
+
+    .stage-chip.todo {
+      background: var(--bg-body);
+      border: 1.5px dashed var(--border-color);
+    }
+
+    .stage-chip.todo i {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .stage-arrow {
+      color: var(--border-color);
+      font-size: 0.85rem;
+    }
+
     /* Progress Bar */
-    .prog-wrap { display: flex; align-items: center; gap: 0.5rem; }
-    .prog-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-body); overflow: hidden; }
-    .prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #4f46e5); transition: width 0.6s ease; }
-    .prog-fill.full { background: linear-gradient(90deg, #10b981, #059669); }
-    .prog-txt { font-size: 0.75rem; color: var(--text-muted); min-width: 32px; text-align: right; }
+    .prog-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .prog-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-body);
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+      transition: width 0.6s ease;
+    }
+
+    .prog-fill.full {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .prog-txt {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 32px;
+      text-align: right;
+    }
+
     /* User cell */
-    .user-cell { display: flex; flex-direction: column; }
-    .user-cell .uname { font-weight: 600; margin-bottom: 2px; }
-    .user-cell .uemail { font-size: 0.76rem; color: var(--text-muted); }
+    .user-cell {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-cell .uname {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .user-cell .uemail {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
     /* Video badge */
-    .badge-video-yes { background: #d1fae5; color: #065f46; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
-    .badge-video-no { background: var(--bg-body); color: var(--text-muted); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600; border: 1px solid var(--border-color); }
+    .badge-video-yes {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .badge-video-no {
+      background: var(--bg-body);
+      color: var(--text-muted);
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+    }
+
     /* Tab Bar */
-    .tab-bar { display: flex; gap: 2px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; margin-bottom: 1.5rem; width: fit-content; }
-    .tab-btn { padding: 0.45rem 1.1rem; border-radius: 6px; font-size: 0.84rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.15s; }
-    .tab-btn.active { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .empty-msg { text-align: center; padding: 3rem; color: var(--text-muted); }
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      background: var(--bg-body);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 1.5rem;
+      width: fit-content;
+    }
+
+    .tab-btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-msg {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
     /* Data Table (from old design) */
-    .table-card { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 1rem; }
-    .table-controls { padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-    .filters { display: flex; gap: 0.75rem; }
-    .filters select { padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 0.85rem; }
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .data-table th { text-align: left; padding: 1rem 1.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-color); background: var(--bg-body); font-weight: 600; letter-spacing: 0.05em; }
-    .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
-    .data-table tr:hover td { background: var(--bg-body); }
-    .badge { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .type-psychology { background: #e0e7ff; color: #4338ca; }
-    .type-neuroscience { background: #cffafe; color: #0891b2; }
-    .type-letter { background: #fef3c7; color: #b45309; }
-    .type-astrology { background: #f3e8ff; color: #7e22ce; }
-    .type-comprehensive { background: #d1fae5; color: #047857; }
-    .action-btn { background: none; border: none; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 500; transition: all 0.2s; }
-    .view-btn { color: #6366f1; background: #e0e7ff; }
-    .delete-btn { color: #ef4444; background: #fee2e2; }
+    .table-card {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .table-controls {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .filters select {
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 1rem 1.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-body);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover td {
+      background: var(--bg-body);
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .type-psychology {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .type-neuroscience {
+      background: #cffafe;
+      color: #0891b2;
+    }
+
+    .type-letter {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .type-astrology {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+
+    .type-comprehensive {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .view-btn {
+      color: #6366f1;
+      background: #e0e7ff;
+    }
+
+    .delete-btn {
+      color: #ef4444;
+      background: #fee2e2;
+    }
+
     /* Type breakdown inside KPI */
-    .type-breakdown { display: flex; flex-direction: column; gap: 4px; margin-top: 0.4rem; }
-    .type-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.73rem; gap: 6px; }
-    .type-row .type-name { color: var(--text-muted); white-space: nowrap; }
-    .type-row .type-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--bg-body); overflow: hidden; }
-    .type-row .type-fill { height: 100%; border-radius: 3px; }
-    .type-row .type-cnt { color: var(--text-main); font-weight: 600; min-width: 20px; text-align: right; }
+    .type-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 0.4rem;
+    }
+
+    .type-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.73rem;
+      gap: 6px;
+    }
+
+    .type-row .type-name {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .type-row .type-bar {
+      flex: 1;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--bg-body);
+      overflow: hidden;
+    }
+
+    .type-row .type-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .type-row .type-cnt {
+      color: var(--text-main);
+      font-weight: 600;
+      min-width: 20px;
+      text-align: right;
+    }
   </style>
 </head>
+
 <body>
   <div class="app-layout">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo" data-i18n="sidebar-logo">Bayt Al Hayat</div>
       <nav class="nav-menu">
-        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span
+            data-i18n="nav-dashboard">Dashboard</span></a>
         <div class="nav-divider"></div>
         <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
-        <a href="assessments.html" class="nav-item active"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
-        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> <span data-i18n="nav-videos">Videos</span></a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
+        <a href="assessments.html" class="nav-item active"><i class='bx bx-book-open'></i> <span
+            data-i18n="nav-assessments">Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span
+            data-i18n="nav-payments">Payments</span></a>
 
         <div class="nav-divider"></div>
-        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span
+            data-i18n="nav-settings">Settings</span></a>
         <div class="nav-divider"></div>
-        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span
+            data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
@@ -100,13 +418,16 @@
         <div class="header-right">
           <button class="btn-icon" id="toggleLanguage" title="Switch Language"><span>عربي</span></button>
           <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
-          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+          <div class="user-profile">
+            <div class="avatar"><i class='bx bx-user'></i></div>
+          </div>
         </div>
       </header>
 
       <div class="dashboard-body">
         <div class="dashboard-header-info">
-          <div class="breadcrumb"><strong data-i18n="breadcrumb-assessments">Assessments</strong> <span>|</span> <span data-i18n="breadcrumb-logs">Logs</span></div>
+          <div class="breadcrumb"><strong data-i18n="breadcrumb-assessments">Assessments</strong> <span>|</span> <span
+              data-i18n="breadcrumb-logs">Logs</span></div>
         </div>
 
         <!-- KPI Row -->
@@ -117,7 +438,8 @@
             <div class="kpi-sub" data-i18n="sub-started-at-least-1">Started at least 1 stage</div>
           </div>
           <div class="kpi-mini" style="grid-column: span 2;">
-            <div class="kpi-label" data-i18n="kpi-assessments-type"><i class='bx bx-book-open'></i> Assessments by Type</div>
+            <div class="kpi-label" data-i18n="kpi-assessments-type"><i class='bx bx-book-open'></i> Assessments by Type
+            </div>
             <div class="type-breakdown" id="kpiTypeBreakdown">
               <div style="color:var(--text-muted);font-size:0.8rem;">Loading...</div>
             </div>
@@ -136,8 +458,10 @@
 
         <!-- Tab Bar -->
         <div class="tab-bar">
-          <button class="tab-btn active" onclick="switchTab('journey', this)"><i class='bx bx-map-alt'></i> <span data-i18n="journey-title-short">Journey View</span></button>
-          <button class="tab-btn" onclick="switchTab('records', this)"><i class='bx bx-list-ul'></i> <span data-i18n="all-records">All Records</span></button>
+          <button class="tab-btn active" onclick="switchTab('journey', this)"><i class='bx bx-map-alt'></i> <span
+              data-i18n="journey-title-short">Journey View</span></button>
+          <button class="tab-btn" onclick="switchTab('records', this)"><i class='bx bx-list-ul'></i> <span
+              data-i18n="all-records">All Records</span></button>
         </div>
 
         <!-- JOURNEY VIEW TAB -->
@@ -154,7 +478,9 @@
                 </tr>
               </thead>
               <tbody id="journeyTableBody">
-                <tr><td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr>
+                <tr>
+                  <td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -164,7 +490,8 @@
         <div id="tabRecords" style="display:none;">
           <div class="table-card">
             <div class="table-controls">
-              <h2 style="font-size: 1rem; font-weight: 600;" data-i18n="all-assessment-records">All Assessment Records</h2>
+              <h2 style="font-size: 1rem; font-weight: 600;" data-i18n="all-assessment-records">All Assessment Records
+              </h2>
               <div class="filters">
                 <select id="typeFilter" onchange="filterRecords()">
                   <option value="all" data-i18n="filter-all-types">All Types</option>
@@ -192,7 +519,9 @@
                 </tr>
               </thead>
               <tbody id="recordsTableBody">
-                <tr><td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td></tr>
+                <tr>
+                  <td colspan="5" class="empty-msg"><i class='bx bx-loader-alt bx-spin'></i> Loading...</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -203,11 +532,15 @@
   </div>
 
   <!-- Result Modal -->
-  <div id="resultModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;">
-    <div style="background:var(--bg-surface);border-radius:12px;padding:2rem;max-width:700px;width:95%;max-height:80vh;overflow-y:auto;position:relative;">
-      <button onclick="closeModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);">×</button>
+  <div id="resultModal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;">
+    <div
+      style="background:var(--bg-surface);border-radius:12px;padding:2rem;max-width:700px;width:95%;max-height:80vh;overflow-y:auto;position:relative;">
+      <button onclick="closeModal()"
+        style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);">×</button>
       <h3 style="margin-bottom:1rem;font-size:1rem;" id="modalTitle">Assessment Result</h3>
-      <pre id="modalContent" style="font-size:0.78rem;background:var(--bg-body);padding:1rem;border-radius:8px;overflow:auto;max-height:50vh;white-space:pre-wrap;"></pre>
+      <pre id="modalContent"
+        style="font-size:0.78rem;background:var(--bg-body);padding:1rem;border-radius:8px;overflow:auto;max-height:50vh;white-space:pre-wrap;"></pre>
     </div>
   </div>
 
@@ -318,11 +651,11 @@
 
         // Per-type breakdown KPI
         const TYPE_COLORS = {
-          psychology:   '#6366f1',
+          psychology: '#6366f1',
           neuroscience: '#06b6d4',
-          letter:       '#f59e0b',
-          astrology:    '#8b5cf6',
-          comprehensive:'#10b981'
+          letter: '#f59e0b',
+          astrology: '#8b5cf6',
+          comprehensive: '#10b981'
         };
         const typeCounts = {};
         STAGES.forEach(s => typeCounts[s] = 0);
@@ -410,4 +743,5 @@
     }
   </script>
 </body>
+
 </html>

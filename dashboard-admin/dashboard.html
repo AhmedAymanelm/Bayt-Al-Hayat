@@ -19,16 +19,21 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo" data-i18n="sidebar-logo">Bayt Al Hayat</div>
       <nav class="nav-menu">
-        <a href="dashboard.html" class="nav-item active"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
+        <a href="dashboard.html" class="nav-item active"><i class='bx bx-desktop'></i> <span
+            data-i18n="nav-dashboard">Dashboard</span></a>
         <div class="nav-divider"></div>
         <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
-        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
-        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> <span data-i18n="nav-videos">Videos</span></a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span
+            data-i18n="nav-assessments">Assessments</span></a>
+
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span
+            data-i18n="nav-payments">Payments</span></a>
         <div class="nav-divider"></div>
-        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
+        <a href="settings.html" class="nav-item"><i class='bx bx-cog'></i> <span
+            data-i18n="nav-settings">Settings</span></a>
         <div class="nav-divider"></div>
-        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span
+            data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
@@ -51,7 +56,8 @@
       <div class="dashboard-body">
 
         <div class="dashboard-header-info">
-          <div class="breadcrumb"><strong data-i18n="breadcrumb-dashboard">Dashboard</strong> <span>|</span> <span data-i18n="breadcrumb-overview">Overview</span></div>
+          <div class="breadcrumb"><strong data-i18n="breadcrumb-dashboard">Dashboard</strong> <span>|</span> <span
+              data-i18n="breadcrumb-overview">Overview</span></div>
           <div class="date-time-display" id="currentDateTime">--</div>
         </div>
 
@@ -90,13 +96,7 @@
             </div>
           </div>
 
-          <div class="kpi-card">
-            <div class="kpi-icon-wrap kpi-icon-4"><i class='bx bx-video-plus'></i></div>
-            <div class="kpi-info">
-              <h3>—</h3>
-              <p data-i18n="kpi-videos">Videos Generated</p>
-            </div>
-          </div>
+
 
           <div class="kpi-card">
             <div class="kpi-icon-wrap" style="background: rgba(249,115,22,0.15); color:#f97316;"><i
@@ -122,18 +122,21 @@
         <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; margin-top: 1.5rem;">
           <div class="card"
             style="background: var(--bg-surface); padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border-color);">
-            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);" data-i18n="chart-reg-trend">User Registration Trend</h4>
+            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);" data-i18n="chart-reg-trend">
+              User Registration Trend</h4>
             <div style="height: 200px;"><canvas id="userGrowthChart"></canvas></div>
           </div>
           <div class="card"
             style="background: var(--bg-surface); padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border-color);">
-            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);" data-i18n="chart-age-dist">Users Age Distribution</h4>
+            <h4 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-main);" data-i18n="chart-age-dist">
+              Users Age Distribution</h4>
             <div style="height: 200px;"><canvas id="assessmentPieChart"></canvas></div>
           </div>
         </div>
 
         <!-- NEW: Journey Drop-off Analysis Section -->
-        <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--text-main);" data-i18n="journey-title">Assessment Journey Drop-off</h3>
+        <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--text-main);" data-i18n="journey-title">
+          Assessment Journey Drop-off</h3>
         <div class="card"
           style="background: var(--bg-surface); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem;"
           id="journeyDropoffContainer">
@@ -142,11 +145,15 @@
         </div>
 
         <!-- NEW: AI Models Quota & Balances Section -->
-        <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;"><i class='bx bx-brain'></i> <span data-i18n="ai-quota-title">AI Models Quota & Balances</span></h3>
+        <h3
+          style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+          <i class='bx bx-brain'></i> <span data-i18n="ai-quota-title">AI Models Quota & Balances</span></h3>
         <div class="card"
           style="background: var(--bg-surface); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
-          <div id="aiBalancesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
-            <div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i class='bx bx-loader-alt bx-spin'></i> Loading balance data...</div>
+          <div id="aiBalancesContainer"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+            <div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i
+                class='bx bx-loader-alt bx-spin'></i> Loading balance data...</div>
           </div>
         </div>
 

@@ -40,6 +40,8 @@ class NeuroscienceScores(BaseModel):
     D: int = Field(..., description="Fawn score")
 
 
+from typing import Optional
+
 class NeuroscienceAssessmentResult(BaseModel):
     """Neuroscience assessment result model"""
     scores: NeuroscienceScores
@@ -47,3 +49,4 @@ class NeuroscienceAssessmentResult(BaseModel):
     secondary: str
     strong_secondary: bool = False
     description: str
+    background_music_url: Optional[str] = None

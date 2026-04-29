@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,118 +10,763 @@
   <script src="i18n.js?v=3"></script>
   <style>
     /* ── Tab Nav ─────────────────────────────────────────────── */
-    .tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; }
-    .tab-btn { padding: 0.7rem 1.4rem; background: none; border: none; font-size: 0.875rem; font-weight: 600;
-               color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent;
-               margin-bottom: -2px; display: flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
-    .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-    .tab-btn:hover:not(.active) { color: var(--text-main); }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      padding: 0.7rem 1.4rem;
+      background: none;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--text-main);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
 
     /* ── Cards / Tables ─────────────────────────────────────── */
-    .card { background: var(--bg-surface); border-radius: 10px; padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 1.25rem; }
-    .section-title { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.25rem;
+    }
 
-    .settings-table { width: 100%; border-collapse: collapse; }
-    .settings-table th { padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
-                         border-bottom: 2px solid var(--border-color); text-align: left; text-transform: uppercase; letter-spacing: 0.05em; }
-    .settings-table td { padding: 0.85rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
-    .settings-table tr:last-child td { border-bottom: none; }
-    .settings-table tr:hover td { background: var(--bg-body); }
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-    .badge-active   { background: #d1fae5; color: #065f46; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
-    .badge-inactive { background: #fee2e2; color: #991b1b; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
-    .badge-test     { background: #fef3c7; color: #92400e; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
+    .settings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-    .masked-key { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.05em; }
+    .settings-table th {
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-color);
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
-    .btn-edit { padding: 0.3rem 0.85rem; background: var(--primary-color); color: #fff; border: none;
-                border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
-    .btn-edit:hover { opacity: 0.85; }
+    .settings-table td {
+      padding: 0.85rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .settings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .settings-table tr:hover td {
+      background: var(--bg-body);
+    }
+
+    /* ── Pattern Music Special Styles ── */
+    .music-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .music-item-card {
+      background: var(--bg-surface);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .music-item-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px -8px rgba(0,0,0,0.15);
+      border-color: var(--primary-color);
+    }
+    .pattern-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pattern-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .pattern-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-fight { background: #fee2e2; color: #dc2626; }
+    .badge-flight { background: #e0f2fe; color: #0284c7; }
+    .badge-freeze { background: #f3f4f6; color: #4b5563; }
+    .badge-fawn { background: #fef3c7; color: #d97706; }
+    
+    .audio-preview-container {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px dashed var(--border-color);
+    }
+    .no-music-placeholder {
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+    .upload-zone {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      color: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .upload-zone h3 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+    
+    .upload-controls {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      gap: 1.5rem;
+      align-items: end;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1.5rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+    }
+    .upload-controls .form-group label {
+      color: #94a3b8;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+    .upload-controls select, .upload-controls input[type="file"] {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      height: 48px;
+      padding: 0 1rem;
+      border-radius: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .upload-controls select:focus { border-color: var(--primary-color); outline: none; }
+    
+    .upload-controls input[type="file"]::-webkit-file-upload-button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin-right: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    
+    .btn-creative-upload {
+      background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+      color: white;
+      border: none;
+      padding: 0 2.5rem;
+      height: 48px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: all 0.3s;
+      box-shadow: 0 10px 20px -10px rgba(79, 70, 229, 0.5);
+    }
+    .btn-creative-upload:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 25px -10px rgba(79, 70, 229, 0.6);
+    }
+    .btn-creative-upload:disabled { opacity: 0.6; cursor: not-allowed; }
+    .music-btn-del {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .music-item-card:hover .music-btn-del { opacity: 1; }
+
+    /* ── Progress Bar ── */
+    .progress-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      margin-top: 1rem;
+      display: none;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #10b981;
+      border-radius: 10px;
+      transition: width 0.2s ease-out;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    }
+    .progress-text {
+      font-size: 0.75rem;
+      color: white;
+      margin-top: 0.4rem;
+      display: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .upload-controls { flex-direction: column; }
+    }
+
+    /* ── Creative Alerts ── */
+    .creative-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .creative-modal-overlay.show { display: flex; opacity: 1; }
+    .creative-modal-box {
+      background: var(--bg-surface);
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .creative-modal-overlay.show .creative-modal-box { transform: scale(1); }
+    .creative-modal-icon {
+      width: 84px; height: 84px;
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-radius: 20px;
+      display: flex;
+      align-items: center; justify-content: center;
+      font-size: 3rem;
+      margin: 0 auto 1.5rem;
+      transform: rotate(-5deg);
+    }
+    .creative-modal-title { font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.8rem; letter-spacing: -0.03em; }
+    .creative-modal-text { font-size: 1rem; color: #64748b; line-height: 1.6; margin-bottom: 2.5rem; }
+    .creative-modal-actions { display: flex; gap: 1rem; }
+    .creative-btn {
+      flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .creative-btn-confirm { background: #ef4444; color: white; }
+    .creative-btn-confirm:hover { background: #dc2626; box-shadow: 0 8px 15px rgba(239, 68, 68, 0.3); }
+    .creative-btn-cancel { background: var(--bg-body); color: var(--text-muted); }
+    .creative-btn-cancel:hover { background: #e2e8f0; }
+
+    /* Toast */
+    .creative-toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: white;
+      border-left: 5px solid var(--primary-color);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      display: flex; align-items: center; gap: 1rem;
+      z-index: 10000;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .creative-toast.show { transform: translateX(0); }
+    .creative-toast-icon { font-size: 1.5rem; color: var(--primary-color); }
+    .creative-toast-content { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+
+
+    .badge-active {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-test {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .masked-key {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .btn-edit {
+      padding: 0.3rem 0.85rem;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn-edit:hover {
+      opacity: 0.85;
+    }
 
     /* ── Modal ──────────────────────────────────────────────── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
-                     z-index: 1000; display: none; align-items: center; justify-content: center; }
-    .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--bg-surface); border-radius: 16px; padding: 2rem;
-                 width: 480px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.25); position: relative; }
-    .modal-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.25rem; color: var(--text-main); }
-    .modal-title span { color: var(--primary-color); }
-    .modal-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-    .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none;
-                   font-size: 1.25rem; cursor: pointer; color: var(--text-muted); }
-    .modal-close:hover { color: var(--text-main); }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
 
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted);
-                        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
-    .form-group input, .form-group select {
-      width: 100%; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid var(--border-color);
-      background: var(--bg-body); color: var(--text-main); font-size: 0.875rem;
-      box-sizing: border-box; transition: border-color 0.2s; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-color); }
+    .modal-overlay.show {
+      display: flex;
+    }
 
-    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
-    .btn-submit { flex: 1; padding: 0.7rem; background: var(--primary-color); color: #fff; border: none;
-                  border-radius: 8px; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
-    .btn-submit:hover { opacity: 0.9; }
-    .btn-cancel { padding: 0.7rem 1.2rem; background: var(--bg-body); color: var(--text-muted);
-                  border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
-    .modal-msg { font-size: 0.82rem; margin-top: 0.5rem; font-weight: 600; }
-    .msg-ok  { color: #16a34a; }
-    .msg-err { color: #dc2626; }
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 480px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem;
+      color: var(--text-main);
+    }
+
+    .modal-title span {
+      color: var(--primary-color);
+    }
+
+    .modal-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-submit {
+      flex: 1;
+      padding: 0.7rem;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
+
+    .btn-cancel {
+      padding: 0.7rem 1.2rem;
+      background: var(--bg-body);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .modal-msg {
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+
+    .msg-ok {
+      color: #16a34a;
+    }
+
+    .msg-err {
+      color: #dc2626;
+    }
 
     /* ── Health ─────────────────────────────────────────────── */
-    .health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    .health-card { background: var(--bg-surface); border-radius: 10px; padding: 1.1rem 1.25rem;
-                   border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.9rem; }
-    .health-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
-    .health-icon.ok      { background: #d1fae5; color: #065f46; }
-    .health-icon.missing { background: #fee2e2; color: #991b1b; }
-    .health-info h4 { font-size: 0.85rem; font-weight: 600; margin: 0 0 0.2rem; }
-    .health-info p  { font-size: 0.76rem; margin: 0; }
-    .status-ok  { color: #16a34a; }
-    .status-err { color: #dc2626; }
-    .status-banner { border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 1.25rem;
-                     display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 500; }
-    .banner-ok   { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-    .banner-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .health-card {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .health-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .health-icon.ok {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .health-icon.missing {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .health-info h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0 0 0.2rem;
+    }
+
+    .health-info p {
+      font-size: 0.76rem;
+      margin: 0;
+    }
+
+    .status-ok {
+      color: #16a34a;
+    }
+
+    .status-err {
+      color: #dc2626;
+    }
+
+    .status-banner {
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .banner-ok {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .banner-warn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
 
     /* ── Admin Management ───────────────────────────────────── */
-    .grant-form { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
-    .grant-form input { flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 0.875rem; }
-    .btn-grant { padding: 0.6rem 1.2rem; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
-    .btn-grant:hover { opacity: 0.9; }
-    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    .admin-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-color); }
-    .admin-table td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
-    .admin-table tr:last-child td { border-bottom: none; }
-    .badge-admin { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.7rem; font-weight: 700; }
-    .btn-revoke { padding: 0.3rem 0.75rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-    .btn-revoke:hover { background: #fca5a5; }
-    .info-card { background: var(--bg-surface); border-radius: 10px; padding: 1.1rem 1.5rem; border: 1px solid var(--border-color); margin-top: 1rem; }
-    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
-    .info-row:last-child { border-bottom: none; }
-    .info-row label { color: var(--text-muted); }
-    .info-row span { font-weight: 500; }
+    .grant-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grant-form input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 0.875rem;
+    }
+
+    .btn-grant {
+      padding: 0.6rem 1.2rem;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .btn-grant:hover {
+      opacity: 0.9;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .admin-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-admin {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .btn-revoke {
+      padding: 0.3rem 0.75rem;
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-revoke:hover {
+      background: #fca5a5;
+    }
+
+    .info-card {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 1.1rem 1.5rem;
+      border: 1px solid var(--border-color);
+      margin-top: 1rem;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row label {
+      color: var(--text-muted);
+    }
+
+    .info-row span {
+      font-weight: 500;
+    }
   </style>
 </head>
+
 <body>
   <div class="app-layout">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo" data-i18n="sidebar-logo">Bayt Al Hayat</div>
       <nav class="nav-menu">
-        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span data-i18n="nav-dashboard">Dashboard</span></a>
+        <a href="dashboard.html" class="nav-item"><i class='bx bx-desktop'></i> <span
+            data-i18n="nav-dashboard">Dashboard</span></a>
         <div class="nav-divider"></div>
         <a href="users.html" class="nav-item"><i class='bx bx-group'></i> <span data-i18n="nav-users">Users</span></a>
-        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span data-i18n="nav-assessments">Assessments</span></a>
-        <a href="videos.html" class="nav-item"><i class='bx bx-video'></i> <span data-i18n="nav-videos">Videos</span></a>
-        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span data-i18n="nav-payments">Payments</span></a>
+        <a href="assessments.html" class="nav-item"><i class='bx bx-book-open'></i> <span
+            data-i18n="nav-assessments">Assessments</span></a>
+        <a href="payments.html" class="nav-item"><i class='bx bx-dollar-circle'></i> <span
+            data-i18n="nav-payments">Payments</span></a>
         <div class="nav-divider"></div>
-        <a href="settings.html" class="nav-item active"><i class='bx bx-cog'></i> <span data-i18n="nav-settings">Settings</span></a>
+        <a href="settings.html" class="nav-item active"><i class='bx bx-cog'></i> <span
+            data-i18n="nav-settings">Settings</span></a>
         <div class="nav-divider"></div>
-        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span data-i18n="nav-logout">Logout</span></a>
+        <a href="#" class="nav-item nav-logout" onclick="logout()"><i class='bx bx-log-out'></i> <span
+            data-i18n="nav-logout">Logout</span></a>
       </nav>
     </aside>
 
@@ -132,17 +778,21 @@
         <div class="header-right">
           <button class="btn-icon" id="toggleLanguage" title="Switch Language"><span>عربي</span></button>
           <button class="btn-icon" id="toggleTheme"><i class='bx bx-moon'></i></button>
-          <div class="user-profile"><div class="avatar"><i class='bx bx-user'></i></div></div>
+          <div class="user-profile">
+            <div class="avatar"><i class='bx bx-user'></i></div>
+          </div>
         </div>
       </header>
 
       <div class="dashboard-body">
         <div class="dashboard-header-info">
-          <div class="breadcrumb"><strong data-i18n="breadcrumb-settings">Settings</strong> <span>|</span> <span data-i18n="breadcrumb-config">Configuration Center</span></div>
+          <div class="breadcrumb"><strong data-i18n="breadcrumb-settings">Settings</strong> <span>|</span> <span
+              data-i18n="breadcrumb-config">Configuration Center</span></div>
         </div>
 
         <!-- Tab Bar -->
-        <div class="tab-bar" style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:4px; padding-bottom:8px; border-bottom:1px solid var(--border-color); margin-bottom:1.5rem;">
+        <div class="tab-bar"
+          style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:4px; padding-bottom:8px; border-bottom:1px solid var(--border-color); margin-bottom:1.5rem;">
           <button class="tab-btn active" onclick="switchTab('gateways', this)">
             <i class='bx bx-credit-card'></i> <span data-i18n="tab-gateways">Payment Gateways</span>
           </button>
@@ -161,12 +811,19 @@
           <button class="tab-btn" onclick="switchTab('questions', this)">
             <i class='bx bx-help-circle'></i> <span data-i18n="tab-questions">Questions</span>
           </button>
+          <button class="tab-btn" onclick="switchTab('subscriptions', this)">
+            <i class='bx bx-star'></i> <span>Subscriptions</span>
+          </button>
+          <button class="tab-btn" onclick="switchTab('pattern_music', this)">
+            <i class='bx bx-music'></i> <span data-i18n="tabs-pattern-music">Pattern Music</span>
+          </button>
         </div>
 
         <!-- ── TAB: Payment Gateways ─────────────────────────────── -->
         <div class="tab-panel active" id="tab-gateways">
           <div class="card">
-            <h3 class="section-title"><i class='bx bx-credit-card' style="color:var(--primary-color)"></i> Payment Gateways</h3>
+            <h3 class="section-title"><i class='bx bx-credit-card' style="color:var(--primary-color)"></i> Payment
+              Gateways</h3>
             <table class="settings-table" id="gatewayTable">
               <thead>
                 <tr>
@@ -181,9 +838,11 @@
                 </tr>
               </thead>
               <tbody id="gatewayTableBody">
-                <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">
-                  <i class='bx bx-loader-alt bx-spin'></i> Loading...
-                </td></tr>
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class='bx bx-loader-alt bx-spin'></i> Loading...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -192,17 +851,22 @@
         <!-- ── TAB: Pricing ──────────────────────────────────────── -->
         <div class="tab-panel" id="tab-pricing">
           <div class="card">
-            <h3 class="section-title"><i class='bx bx-purchase-tag' style="color:var(--primary-color)"></i> Pricing Settings</h3>
+            <h3 class="section-title"><i class='bx bx-purchase-tag' style="color:var(--primary-color)"></i> Pricing
+              Settings</h3>
             <table class="settings-table" id="pricingTable">
               <thead>
                 <tr>
-                  <th>Service</th><th>Current Price (EGP)</th><th>Edit</th>
+                  <th>Service</th>
+                  <th>Current Price (EGP)</th>
+                  <th>Edit</th>
                 </tr>
               </thead>
               <tbody id="pricingTableBody">
-                <tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">
-                  <i class='bx bx-loader-alt bx-spin'></i> Loading...
-                </td></tr>
+                <tr>
+                  <td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class='bx bx-loader-alt bx-spin'></i> Loading...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -211,23 +875,37 @@
         <!-- ── TAB: AI Models ──────────────────────────────────────── -->
         <div class="tab-panel" id="tab-models">
           <!-- QUICK BALANCES -->
-          <h3 style="margin: 0 0 1rem; font-size: 1.05rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;"><i class='bx bx-pie-chart-alt-2'></i> <span data-i18n="ai-quota-title">AI Models Quota & Balances</span></h3>
+          <h3
+            style="margin: 0 0 1rem; font-size: 1.05rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+            <i class='bx bx-pie-chart-alt-2'></i> <span data-i18n="ai-quota-title">AI Models Quota & Balances</span>
+          </h3>
           <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem;">
-            <div id="aiBalancesContainerSettings" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
-              <div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i class='bx bx-loader-alt bx-spin'></i> Loading balance data...</div>
+            <div id="aiBalancesContainerSettings"
+              style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+              <div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i
+                  class='bx bx-loader-alt bx-spin'></i> Loading balance data...</div>
             </div>
           </div>
 
           <div class="card">
-            <h3 class="section-title"><i class='bx bx-brain' style="color:var(--primary-color)"></i> AI Model API Keys</h3>
+            <h3 class="section-title"><i class='bx bx-brain' style="color:var(--primary-color)"></i> AI Model API Keys
+            </h3>
             <table class="settings-table" id="modelsTable">
               <thead>
-                <tr><th>Service</th><th>Description</th><th>Key Preview</th><th>Status</th><th>Edit</th></tr>
+                <tr>
+                  <th>Service</th>
+                  <th>Description</th>
+                  <th>Key Preview</th>
+                  <th>Status</th>
+                  <th>Edit</th>
+                </tr>
               </thead>
               <tbody id="modelsTableBody">
-                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">
-                  <i class='bx bx-loader-alt bx-spin'></i> Loading...
-                </td></tr>
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class='bx bx-loader-alt bx-spin'></i> Loading...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -240,7 +918,9 @@
           </div>
           <div class="health-grid" id="healthGrid"></div>
           <div class="info-card" style="margin-top:1.25rem;">
-            <h4 style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Platform Info</h4>
+            <h4
+              style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">
+              Platform Info</h4>
             <div class="info-row"><label>Platform</label><span id="infoPlatform">—</span></div>
             <div class="info-row"><label>Last Checked</label><span id="infoChecked">—</span></div>
             <div class="info-row"><label>Backend URL</label><span id="infoURL">—</span></div>
@@ -250,17 +930,28 @@
         <!-- ── TAB: Admin Access ───────────────────────────────────── -->
         <div class="tab-panel" id="tab-admins">
           <div class="card">
-            <h3 class="section-title"><i class='bx bx-shield-alt-2' style="color:var(--primary-color)"></i> Admin Access Management</h3>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 1rem;">Grant or revoke admin dashboard access.</p>
+            <h3 class="section-title"><i class='bx bx-shield-alt-2' style="color:var(--primary-color)"></i> Admin Access
+              Management</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 1rem;">Grant or revoke admin dashboard
+              access.</p>
             <div class="grant-form">
               <input type="email" id="grantEmailInput" placeholder="Enter user email...">
               <button class="btn-grant" onclick="grantAdmin()"><i class='bx bx-user-plus'></i> Grant Access</button>
               <span id="grantMsg"></span>
             </div>
             <table class="admin-table">
-              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
               <tbody id="adminsTableBody">
-                <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:1rem;">Loading...</td></tr>
+                <tr>
+                  <td colspan="4" style="color:var(--text-muted);text-align:center;padding:1rem;">Loading...</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -269,10 +960,13 @@
         <!-- ── TAB: Questions Management ─────────────────────────────── -->
         <div class="tab-panel" id="tab-questions">
           <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
-              <h3 class="section-title" style="margin:0;"><i class='bx bx-help-circle' style="color:var(--primary-color)"></i> Assessment Questions</h3>
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
+              <h3 class="section-title" style="margin:0;"><i class='bx bx-help-circle'
+                  style="color:var(--primary-color)"></i> Assessment Questions</h3>
               <div style="display:flex; gap:0.75rem; align-items:center;">
-                <select id="qTypeSelector" onchange="loadQuestions()" style="padding:0.45rem 0.9rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-body);color:var(--text-main);font-size:0.85rem;font-weight:600;">
+                <select id="qTypeSelector" onchange="loadQuestions()"
+                  style="padding:0.45rem 0.9rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-body);color:var(--text-main);font-size:0.85rem;font-weight:600;">
                   <option value="psychology">🧠 Psychology</option>
                   <option value="neuroscience">🔬 Neuroscience</option>
                 </select>
@@ -292,11 +986,100 @@
                 </tr>
               </thead>
               <tbody id="questionsTableBody">
-                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">
-                  Select a type and the questions will load.
-                </td></tr>
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    Select a type and the questions will load.
+                  </td>
+                </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- ── TAB: Subscriptions ────────────────────────────────────────── -->
+        <div class="tab-panel" id="tab-subscriptions">
+          <!-- QUICK BALANCES -->
+          <h3 style="margin: 0 0 1rem; font-size: 1.05rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+            <i class='bx bx-pie-chart-alt-2'></i> Subscriptions Overview
+          </h3>
+          <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem;">
+            <div id="subsStatsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+              <div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i class='bx bx-loader-alt bx-spin'></i> Loading stats...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title"><i class='bx bx-star' style="color:var(--primary-color)"></i> All Subscriptions
+            </h3>
+            <table class="settings-table" id="subsTable">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Plan Type</th>
+                  <th>Status</th>
+                  <th>Expires In</th>
+                  <th>Granted By Admin</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subsTableBody">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class='bx bx-loader-alt bx-spin'></i> Loading...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── TAB: Pattern Music ────────────────────────────────────────── -->
+        <div class="tab-panel" id="tab-pattern_music">
+          <div class="upload-zone">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem;">
+                <i class='bx bx-waveform'></i> Sonic Branding: Pattern Music
+              </h3>
+              <p style="opacity: 0.9; font-size: 0.95rem;">
+                Create a unique atmosphere for your users by uploading custom scores for each neuro-pattern.
+              </p>
+            </div>
+
+            <div class="upload-controls">
+              <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                <label>Target Pattern</label>
+                <select id="pmPatternSelect">
+                  <option value="Flight">Flight (الحركة/الفعل)</option>
+                  <option value="Fawn">Fawn (التهدئة/الاحتواء)</option>
+                  <option value="Fight">Fight (المواجهة/الحزم)</option>
+                  <option value="Freeze">Freeze (الانسحاب/المراقبة)</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex: 2; min-width: 250px; margin-bottom: 0;">
+                <label>Audio File (MP3/WAV)</label>
+                <input type="file" id="pmFileInput" accept="audio/*">
+              </div>
+              <button class="btn-creative-upload" onclick="uploadPatternMusic()" id="pmUploadBtn">
+                <i class='bx bx-cloud-upload'></i> <span>Start Upload</span>
+              </button>
+            </div>
+            <div id="pmUploadMsg" style="color: white; font-size: 0.85rem; font-weight: 600;"></div>
+            
+            <div id="pmProgressContainer" class="progress-container">
+              <div id="pmProgressBar" class="progress-bar"></div>
+            </div>
+            <div id="pmProgressText" class="progress-text">0% Uploaded</div>
+          </div>
+
+          <h3 class="section-title" style="margin-left: 0.5rem;">
+            <i class='bx bx-grid-alt' style="color:var(--primary-color)"></i> Library Overview
+          </h3>
+          <div class="music-grid" id="pmGridContainer">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+              <i class='bx bx-loader-alt bx-spin' style="font-size: 2rem; color: var(--primary-color);"></i>
+              <p style="margin-top: 1rem; color: var(--text-muted);">Synchronizing Library...</p>
+            </div>
           </div>
         </div>
 
@@ -312,11 +1095,17 @@
       <div class="modal-sub">Update gateway credentials and configuration</div>
       <div class="form-group">
         <label>Status</label>
-        <select id="gw_status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        <select id="gw_status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Mode</label>
-        <select id="gw_mode"><option value="test">Test</option><option value="live">Live</option></select>
+        <select id="gw_mode">
+          <option value="test">Test</option>
+          <option value="live">Live</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Fees Amount</label>
@@ -324,7 +1113,10 @@
       </div>
       <div class="form-group">
         <label>Fees Type</label>
-        <select id="gw_fees_type"><option value="Percentage">Percentage</option><option value="Fixed">Fixed</option></select>
+        <select id="gw_fees_type">
+          <option value="Percentage">Percentage</option>
+          <option value="Fixed">Fixed</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Description (English)</label>
@@ -384,7 +1176,9 @@
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal('modelModal')">Cancel</button>
-        <button class="btn-cancel" onclick="testModelSetting()" style="color:var(--primary-color);border-color:var(--primary-color)"><i class='bx bx-check-shield'></i> Test Connection</button>
+        <button class="btn-cancel" onclick="testModelSetting()"
+          style="color:var(--primary-color);border-color:var(--primary-color)"><i class='bx bx-check-shield'></i> Test
+          Connection</button>
         <button class="btn-submit" onclick="submitModelSetting()"><i class='bx bx-save'></i> Save</button>
       </div>
       <div class="modal-msg" id="mdMsg"></div>
@@ -395,7 +1189,8 @@
   <div class="modal-overlay" id="questionModal">
     <div class="modal-box" style="width:560px;">
       <button class="modal-close" onclick="closeModal('questionModal')"><i class='bx bx-x'></i></button>
-      <div class="modal-title"><i class='bx bx-help-circle' style="color:var(--primary-color);margin-right:0.3rem;"></i> <span id="qModalTitle">Add Question</span></div>
+      <div class="modal-title"><i class='bx bx-help-circle' style="color:var(--primary-color);margin-right:0.3rem;"></i>
+        <span id="qModalTitle">Add Question</span></div>
       <div class="modal-sub" id="qModalSub">Add a new question to the assessment.</div>
       <input type="hidden" id="qEditId">
       <div class="form-group">
@@ -405,11 +1200,14 @@
       <div id="qOptionsContainer">
         <!-- Options will be rendered dynamically -->
       </div>
-      <button onclick="addOptionField()" style="background:none;border:1px dashed var(--border-color);border-radius:8px;padding:0.45rem 1rem;font-size:0.82rem;color:var(--primary-color);cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;gap:0.3rem;">
+      <button onclick="addOptionField()"
+        style="background:none;border:1px dashed var(--border-color);border-radius:8px;padding:0.45rem 1rem;font-size:0.82rem;color:var(--primary-color);cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;gap:0.3rem;">
         <i class='bx bx-plus'></i> Add Option
       </button>
       <div id="qOptionsTextContainer" style="display:none;">
-        <label style="display:block;font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Option Labels (Neuroscience)</label>
+        <label
+          style="display:block;font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Option
+          Labels (Neuroscience)</label>
         <div id="qOptionsTextFields"></div>
       </div>
       <div class="modal-actions">
@@ -418,6 +1216,24 @@
       </div>
       <div class="modal-msg" id="qMsg"></div>
     </div>
+  </div>
+
+  <!-- ── Creative Modal Overlay ── -->
+  <div class="creative-modal-overlay" id="creativeConfirmModal">
+    <div class="creative-modal-box">
+      <div class="creative-modal-icon"><i class='bx bx-error-circle'></i></div>
+      <div class="creative-modal-title" id="ccmTitle">Are you sure?</div>
+      <div class="creative-modal-text" id="ccmText">This action cannot be undone.</div>
+      <div class="creative-modal-actions">
+        <button class="creative-btn creative-btn-cancel" onclick="closeCreativeConfirm()">Cancel</button>
+        <button class="creative-btn creative-btn-confirm" id="ccmConfirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="creative-toast" id="creativeToast">
+    <div class="creative-toast-icon"><i class='bx bxs-check-circle'></i></div>
+    <div class="creative-toast-content" id="ctText">Action successful</div>
   </div>
 
   <script src="app.js?v=3"></script>
@@ -435,11 +1251,13 @@
       btn.classList.add('active');
       // Lazy-load each section
       if (name === 'gateways' && !window._gwLoaded) loadGateways();
-      if (name === 'pricing'  && !window._prLoaded) loadPricing();
-      if (name === 'models'   && !window._mdLoaded) loadModels();
-      if (name === 'health'   && !window._hlLoaded) loadHealth();
-      if (name === 'admins'   && !window._adLoaded) loadAdmins();
+      if (name === 'pricing' && !window._prLoaded) loadPricing();
+      if (name === 'models' && !window._mdLoaded) loadModels();
+      if (name === 'health' && !window._hlLoaded) loadHealth();
+      if (name === 'admins' && !window._adLoaded) loadAdmins();
       if (name === 'questions') loadQuestions();
+      if (name === 'subscriptions' && !window._subLoaded) loadSubscriptions();
+      if (name === 'pattern_music' && !window._pmLoaded) loadPatternMusic();
     }
 
     // ── Payment Gateways ─────────────────────────────────────────
@@ -481,13 +1299,13 @@
     function openGatewayModal(gw) {
       _currentGateway = gw;
       document.getElementById('gwModalName').textContent = gw.name;
-      document.getElementById('gw_status').value    = gw.status;
-      document.getElementById('gw_mode').value      = gw.mode;
-      document.getElementById('gw_fees').value      = gw.fees;
+      document.getElementById('gw_status').value = gw.status;
+      document.getElementById('gw_mode').value = gw.mode;
+      document.getElementById('gw_fees').value = gw.fees;
       document.getElementById('gw_fees_type').value = gw.fees_type;
       document.getElementById('gw_description').value = gw.description;
-      document.getElementById('gw_api_key').value    = '';
-      document.getElementById('gwMsg').textContent   = '';
+      document.getElementById('gw_api_key').value = '';
+      document.getElementById('gwMsg').textContent = '';
       document.getElementById('gatewayModal').classList.add('show');
     }
 
@@ -495,14 +1313,14 @@
       const msg = document.getElementById('gwMsg');
       msg.textContent = 'Saving...'; msg.className = 'modal-msg';
       const body = {
-        status:      document.getElementById('gw_status').value,
-        mode:        document.getElementById('gw_mode').value,
-        fees:        document.getElementById('gw_fees').value,
-        fees_type:   document.getElementById('gw_fees_type').value,
+        status: document.getElementById('gw_status').value,
+        mode: document.getElementById('gw_mode').value,
+        fees: document.getElementById('gw_fees').value,
+        fees_type: document.getElementById('gw_fees_type').value,
         description: document.getElementById('gw_description').value,
       };
-      const apiKey    = document.getElementById('gw_api_key').value.trim();
-      if (apiKey)    body.api_key    = apiKey;
+      const apiKey = document.getElementById('gw_api_key').value.trim();
+      if (apiKey) body.api_key = apiKey;
 
       const res = await apiFetch('/admin/settings/gateways/fawaterk', {
         method: 'PUT', body: JSON.stringify(body)
@@ -553,10 +1371,10 @@
       const amount = document.getElementById('prValue').value.trim();
       const currency = document.getElementById('prCurrency').value;
       const msg = document.getElementById('prMsg');
-      
+
       if (!amount) { msg.textContent = 'Please enter an amount.'; msg.className = 'modal-msg msg-err'; return; }
       msg.textContent = 'Saving...'; msg.className = 'modal-msg';
-      
+
       const res = await apiFetch(`/admin/settings/pricing/${service_type}`, {
         method: 'PUT', body: JSON.stringify({ amount: amount, currency: currency })
       });
@@ -603,8 +1421,8 @@
 
     function openModelModal(m) {
       document.getElementById('mdModalLabel').textContent = m.label;
-      document.getElementById('mdModalDesc').textContent  = m.description || '';
-      document.getElementById('mdKey').value   = m.key;
+      document.getElementById('mdModalDesc').textContent = m.description || '';
+      document.getElementById('mdKey').value = m.key;
       document.getElementById('mdValue').value = '';
       document.getElementById('mdValueLabel').textContent = m.is_secret ? 'New Value (leave blank to keep current)' : 'Value';
       document.getElementById('mdMsg').textContent = '';
@@ -612,9 +1430,9 @@
     }
 
     async function submitModelSetting() {
-      const key   = document.getElementById('mdKey').value;
+      const key = document.getElementById('mdKey').value;
       const value = document.getElementById('mdValue').value.trim();
-      const msg   = document.getElementById('mdMsg');
+      const msg = document.getElementById('mdMsg');
       if (!value) { msg.textContent = 'Please enter a value.'; msg.className = 'modal-msg msg-err'; return; }
       msg.textContent = 'Saving...'; msg.className = 'modal-msg';
       const res = await apiFetch(`/admin/settings/models/${key}`, {
@@ -632,9 +1450,9 @@
     }
 
     async function testModelSetting() {
-      const key   = document.getElementById('mdKey').value;
+      const key = document.getElementById('mdKey').value;
       const value = document.getElementById('mdValue').value.trim();
-      const msg   = document.getElementById('mdMsg');
+      const msg = document.getElementById('mdMsg');
       if (!value) { msg.textContent = 'Please enter a value to test.'; msg.className = 'modal-msg msg-err'; return; }
       msg.textContent = 'Testing connection...'; msg.className = 'modal-msg';
       const res = await apiFetch(`/admin/settings/models/${key}/test`, {
@@ -656,7 +1474,7 @@
         const res = await apiFetch('/admin/settings/models/balances');
         if (!res) return;
         const balances = await res.json();
-        
+
         if (!balances || balances.length === 0) {
           container.innerHTML = '<div style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">No AI models configured.</div>';
           return;
@@ -664,7 +1482,6 @@
 
         const icons = {
           'OpenAI': 'bx-message-square-dots',
-          'RunwayML': 'bx-film',
           'Cloudinary': 'bx-cloud-upload',
           'Astrology API': 'bx-planet'
         };
@@ -691,7 +1508,7 @@
             </div>
           `;
         }).join('');
-        
+
       } catch (err) {
         container.innerHTML = '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Failed to load AI balances.</div>';
       }
@@ -727,8 +1544,8 @@
           </div>`;
         }).join('');
         document.getElementById('infoPlatform').textContent = data.platform || '—';
-        document.getElementById('infoChecked').textContent  = data.checked_at ? new Date(data.checked_at).toLocaleString() : '—';
-        document.getElementById('infoURL').textContent      = window.API_URL;
+        document.getElementById('infoChecked').textContent = data.checked_at ? new Date(data.checked_at).toLocaleString() : '—';
+        document.getElementById('infoURL').textContent = window.API_URL;
       } catch (e) {
         document.getElementById('overallBanner').innerHTML = `<i class='bx bx-error'></i> Could not connect to backend.`;
       }
@@ -765,7 +1582,7 @@
     }
     async function grantAdmin() {
       const email = document.getElementById('grantEmailInput').value.trim();
-      const msg   = document.getElementById('grantMsg');
+      const msg = document.getElementById('grantMsg');
       if (!email) { msg.textContent = 'Enter an email first.'; msg.style.color = '#dc2626'; return; }
       msg.textContent = 'Processing...'; msg.style.color = '';
       const res = await apiFetch('/admin/admins/grant', { method: 'POST', body: JSON.stringify({ email }) });
@@ -875,7 +1692,7 @@
         // Neuroscience: Hide generic options, only show specialized labels
         addBtn.style.display = 'none';
         container.style.display = 'none';
-        
+
         const defaultNeuroLabels = {
           'A': 'مواجهة مباشرة',
           'B': 'تجنب عبر الانشغال',
@@ -904,9 +1721,9 @@
       if (type === 'neuroscience') {
         addBtn.style.display = 'none';
         container.style.display = 'none';
-        
+
         // Check if current options match the defaults to decide if it should be locked or unlocked
-        showNeuroLabels(q.options_text, false); 
+        showNeuroLabels(q.options_text, false);
       } else {
         addBtn.style.display = 'flex';
         container.style.display = 'block';
@@ -936,13 +1753,13 @@
       container.appendChild(div);
     }
 
-    function showNeuroLabels(existingText, lockByDefault=false) {
+    function showNeuroLabels(existingText, lockByDefault = false) {
       const keys = ['A', 'B', 'C', 'D'];
       const container = document.getElementById('qOptionsTextContainer');
       const fields = document.getElementById('qOptionsTextFields');
       container.style.display = 'block';
-      
-      const lockToggleHtml = lockByDefault 
+
+      const lockToggleHtml = lockByDefault
         ? `<div style="text-align:right; margin-bottom: 0.5rem;">
              <button type="button" onclick="unlockNeuroLabels()" style="background:none;border:none;color:var(--primary-color);font-size:0.8rem;cursor:pointer;font-weight:600;"><i class='bx bx-edit-alt'></i> Edit Default Options</button>
            </div>`
@@ -963,12 +1780,12 @@
     }
 
     function unlockNeuroLabels() {
-        document.querySelectorAll('.q-neuro-label').forEach(inp => {
-            inp.removeAttribute('readonly');
-            inp.style.backgroundColor = '';
-            inp.style.cursor = 'text';
-            inp.style.opacity = '1';
-        });
+      document.querySelectorAll('.q-neuro-label').forEach(inp => {
+        inp.removeAttribute('readonly');
+        inp.style.backgroundColor = '';
+        inp.style.cursor = 'text';
+        inp.style.opacity = '1';
+      });
     }
 
     async function submitQuestion() {
@@ -1038,6 +1855,284 @@
         alert(data.detail || 'Error deleting question.');
       }
     }
+
+    // ── Subscriptions ────────────────────────────────────────────────────────
+    async function loadSubscriptions() {
+      window._subLoaded = true;
+      loadSubStats();
+      const tbody = document.getElementById('subsTableBody');
+      try {
+        const res = await apiFetch('/admin/subscriptions');
+        if (!res) return;
+        const subs = await res.json();
+        
+        if (!subs.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No subscriptions found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = subs.map(s => {
+          const statusBadge = s.is_active 
+            ? `<span class="badge-active">Active</span>` 
+            : `<span class="badge-inactive">Inactive</span>`;
+          const grantType = s.granted_by_admin ? '<span style="color:#d97706;font-weight:600;"><i class="bx bx-shield-alt-2"></i> Admin</span>' : 'Paid';
+          const expires = s.expires_at ? new Date(s.expires_at).toLocaleDateString() : '—';
+          const daysLeft = s.days_remaining > 0 ? `<span style="color:#16a34a;font-size:0.75rem;">(${s.days_remaining}d left)</span>` : `<span style="color:#dc2626;font-size:0.75rem;">(Expired)</span>`;
+          const created = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
+
+          return `
+            <tr>
+              <td><strong>${s.user_name || 'N/A'}</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">${s.user_email}</span></td>
+              <td style="text-transform:capitalize;">${s.plan_type}</td>
+              <td>${statusBadge}</td>
+              <td>${expires} ${daysLeft}</td>
+              <td>${grantType}</td>
+              <td style="font-size:0.8rem;color:var(--text-muted);">${created}</td>
+              <td>
+                ${s.is_active ? `<button class="btn-sm btn-del" onclick="revokeSub('${s.user_id}', '${s.user_name}')" title="Revoke"><i class='bx bx-x-circle'></i> Revoke</button>` : '—'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#dc2626;padding:1.5rem;">Failed to load.</td></tr>`;
+      }
+    }
+
+    async function loadSubStats() {
+      const container = document.getElementById('subsStatsContainer');
+      container.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 1rem; grid-column: 1 / -1;"><i class='bx bx-loader-alt bx-spin'></i> Loading stats...</div>`;
+      try {
+        const res = await apiFetch('/admin/subscriptions/stats');
+        if (!res) return;
+        const stats = await res.json();
+        
+        container.innerHTML = `
+          <div style="background:var(--bg-body);border-radius:8px;padding:1rem;border:1px solid var(--border-color);text-align:center;">
+            <div style="font-size:2rem;font-weight:700;color:var(--primary-color);margin-bottom:0.25rem;">${stats.total_active_subscriptions}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Active Subscribers</div>
+          </div>
+          <div style="background:var(--bg-body);border-radius:8px;padding:1rem;border:1px solid var(--border-color);text-align:center;">
+            <div style="font-size:2rem;font-weight:700;color:#16a34a;margin-bottom:0.25rem;">${stats.paid_active}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Paid Active</div>
+          </div>
+          <div style="background:var(--bg-body);border-radius:8px;padding:1rem;border:1px solid var(--border-color);text-align:center;">
+            <div style="font-size:2rem;font-weight:700;color:#d97706;margin-bottom:0.25rem;">${stats.admin_granted_active}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Granted By Admin</div>
+          </div>
+          <div style="background:var(--bg-body);border-radius:8px;padding:1rem;border:1px solid var(--border-color);text-align:center;">
+            <div style="font-size:2rem;font-weight:700;color:var(--text-main);margin-bottom:0.25rem;">${stats.users_with_trial_used}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Trials Used</div>
+          </div>
+        `;
+      } catch (e) {
+        container.innerHTML = `<div style="color:#dc2626; text-align:center; padding: 1rem; grid-column: 1 / -1;">Failed to load stats.</div>`;
+      }
+    }
+
+    async function revokeSub(userId, name) {
+      if (!confirm(`Are you sure you want to revoke all active subscriptions for ${name}?`)) return;
+      const res = await apiFetch(`/admin/users/${userId}/revoke-subscription`, { method: 'POST' });
+      if (res && res.ok) {
+        alert('Subscription revoked.');
+        loadSubscriptions();
+      } else alert('Failed to revoke subscription.');
+    }
+    
+    // ── Pattern Music ────────────────────────────────────────────────────────
+    async function loadPatternMusic() {
+      window._pmLoaded = true;
+      const container = document.getElementById('pmGridContainer');
+      try {
+        const res = await apiFetch('/admin/settings/neuro-music');
+        if (!res) return;
+        const tracks = await res.json();
+        
+        container.innerHTML = tracks.map(t => {
+          const badgeClass = `badge-${t.pattern.toLowerCase()}`;
+          const icon = t.pattern === 'Fight' ? 'bx-angry' : 
+                       t.pattern === 'Flight' ? 'bx-run' : 
+                       t.pattern === 'Freeze' ? 'bx-stop-circle' : 'bx-smile';
+          
+          const hasTracks = t.urls && t.urls.length > 0;
+          let tracksHtml = `<div class="no-music-placeholder">No tracks assigned</div>`;
+          
+          if (hasTracks) {
+            tracksHtml = t.urls.map((url, idx) => `
+              <div style="border-bottom: 1px solid var(--border-color); padding: 0.8rem 0; position: relative;">
+                <button class="btn-sm btn-del" onclick="deletePatternMusic('${t.pattern}', '${url}')" 
+                        style="position: absolute; right: 0; top: 8px; padding: 2px 6px; font-size: 0.7rem;" title="Remove this track">
+                  <i class='bx bx-x'></i>
+                </button>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Track #${idx+1}</div>
+                <audio controls src="${url}" style="width:100%; height:28px;"></audio>
+              </div>
+            `).join('');
+          }
+
+          return `
+            <div class="music-item-card">
+              <div class="pattern-header">
+                <div class="pattern-label">
+                  <i class='bx ${icon}' style="color:var(--primary-color); font-size: 1.4rem;"></i>
+                  <span>${t.pattern}</span>
+                </div>
+                <span class="pattern-badge ${badgeClass}">${t.pattern}</span>
+              </div>
+              
+              <div class="audio-preview-container" style="max-height: 250px; overflow-y: auto;">
+                ${tracksHtml}
+              </div>
+              
+              <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.4; background: var(--bg-body); padding: 0.8rem; border-radius: 8px;">
+                <i class='bx bx-info-circle'></i> 
+                ${t.pattern === 'Fight' ? 'Vibrant, energetic tension for the confrontation response.' :
+                  t.pattern === 'Flight' ? 'Rapid, rhythmic pulses for movement and action.' :
+                  t.pattern === 'Freeze' ? 'Ambient, atmospheric tones for observation and stillness.' :
+                  'Soft, harmonic containment for empathy and soothing.'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; color:#dc2626; padding:3rem;">Failed to load library.</div>`;
+      }
+    }
+
+
+    async function uploadPatternMusic() {
+      const pattern = document.getElementById('pmPatternSelect').value;
+      const fileInput = document.getElementById('pmFileInput');
+      const msg = document.getElementById('pmUploadMsg');
+      const btn = document.getElementById('pmUploadBtn');
+      const progCont = document.getElementById('pmProgressContainer');
+      const progBar = document.getElementById('pmProgressBar');
+      const progText = document.getElementById('pmProgressText');
+      
+      if (!fileInput.files.length) {
+        msg.textContent = 'Please select an audio file.';
+        msg.className = 'modal-msg msg-err';
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('pattern', pattern);
+      formData.append('file', file);
+      
+      btn.disabled = true;
+      btn.innerHTML = `<i class='bx bx-loader-alt bx-spin'></i> Processing...`;
+      msg.textContent = 'Initializing secure upload...';
+      msg.className = 'modal-msg';
+      
+      // Reset & Show progress
+      progCont.style.display = 'block';
+      progText.style.display = 'block';
+      progBar.style.width = '0%';
+      progText.textContent = '0% Uploaded';
+
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          progBar.style.width = percent + '%';
+          progText.textContent = percent + '% Uploaded';
+          if (percent >= 100) {
+            msg.textContent = 'Finalizing with Cloudinary... please wait.';
+            progBar.style.background = '#4361ee'; 
+          }
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            msg.textContent = data.message;
+            msg.className = 'modal-msg msg-ok';
+            fileInput.value = "";
+            loadPatternMusic();
+            
+            setTimeout(() => {
+              progCont.style.display = 'none';
+              progText.style.display = 'none';
+            }, 3000);
+          } else {
+            msg.textContent = (data && data.detail) ? data.detail : 'Error uploading file.';
+            msg.className = 'modal-msg msg-err';
+          }
+        } catch(e) {
+          msg.textContent = 'Server response error.';
+          msg.className = 'modal-msg msg-err';
+        }
+        btn.disabled = false;
+        btn.innerHTML = `<i class='bx bx-cloud-upload'></i> Start Upload`;
+      });
+
+      xhr.addEventListener('error', () => {
+        msg.textContent = 'Network error.';
+        msg.className = 'modal-msg msg-err';
+        btn.disabled = false;
+        btn.innerHTML = `<i class='bx bx-cloud-upload'></i> Start Upload`;
+      });
+
+      xhr.open('POST', `${window.API_URL}/admin/settings/neuro-music/upload`);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('admin_token'));
+      xhr.send(formData);
+    }
+
+    // ── Creative UI Helpers ──────────────────────────────────────────────────
+    let _onConfirmCallback = null;
+    function showCreativeConfirm(title, text, callback) {
+      document.getElementById('ccmTitle').textContent = title;
+      document.getElementById('ccmText').textContent = text;
+      _onConfirmCallback = callback;
+      const modal = document.getElementById('creativeConfirmModal');
+      modal.classList.add('show');
+      
+      const btn = document.getElementById('ccmConfirmBtn');
+      // Remove old listeners
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', () => {
+        closeCreativeConfirm();
+        if (_onConfirmCallback) _onConfirmCallback();
+      });
+    }
+
+    function closeCreativeConfirm() {
+      document.getElementById('creativeConfirmModal').classList.remove('show');
+    }
+
+    function showCreativeToast(text, icon = 'bxs-check-circle') {
+      const toast = document.getElementById('creativeToast');
+      document.getElementById('ctText').textContent = text;
+      toast.querySelector('i').className = 'bx ' + icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    async function deletePatternMusic(pattern, url = null) {
+      const title = url ? 'Delete Track?' : 'Delete All?';
+      const text = url 
+        ? `Are you sure you want to remove this specific track for the ${pattern} pattern? This action is permanent.`
+        : `Are you sure you want to wipe ALL library tracks for the ${pattern} pattern?`;
+        
+      showCreativeConfirm(title, text, async () => {
+        let endpoint = `/admin/settings/neuro-music/${pattern}`;
+        if (url) endpoint += `?url=${encodeURIComponent(url)}`;
+        
+        const res = await apiFetch(endpoint, { method: 'DELETE' });
+        if (res && res.ok) {
+          loadPatternMusic();
+          showCreativeToast('Library updated successfully!');
+        } else {
+          showCreativeToast('Failed to update music list.', 'bx-error-circle');
+        }
+      });
+    }
   </script>
 </body>
+
 </html>

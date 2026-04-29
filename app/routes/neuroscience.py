@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth.models import User
 from app.auth.dependencies import get_current_user
+from app.auth.subscription import check_subscription_access
 from app.models.history import AssessmentHistory
 
 from ..models.neuroscience import (
@@ -27,11 +28,15 @@ async def get_neuroscience_questionnaire(db: AsyncSession = Depends(get_db)):
     return await NeuroscienceService.get_questionnaire_from_db(db)
 
 
+import traceback
+from app.utils.settings_helper import get_env_or_db, get_random_setting_item
+
 @router.post("/submit", response_model=NeuroscienceAssessmentResult)
 async def submit_neuroscience_answers(
     submission: NeuroscienceAnswersSubmission,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(check_subscription_access),
 ):
     """
     Submit user answers and calculate neural pattern
@@ -47,6 +52,13 @@ async def submit_neuroscience_answers(
     """
     try:
         result = NeuroscienceService.calculate_assessment(submission.answers)
+        
+        # Determine base pattern from dominant
+        base_pattern = result.dominant.replace("Mixed ", "").split("/")[0].strip()
+        music_url = await get_random_setting_item(f"neuro_music_{base_pattern.lower()}")
+        
+        if music_url:
+            result.background_music_url = music_url
         
         # Save to history
         history_entry = AssessmentHistory(
