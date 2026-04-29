@@ -186,7 +186,7 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         amount = float(price_str)
         if amount < 5.0:
             amount = 250.00
-    except ValueError:
+    except (ValueError, TypeError):
         amount = 250.00
         
     order_id = f"ORD_{str(uuid.uuid4()).replace('-', '')[:8]}"
@@ -267,7 +267,10 @@ async def create_checkout_session(request: Request, body: PaymentRequest, curren
         except httpx.HTTPStatusError as e:
             raise HTTPException(status_code=e.response.status_code, detail=f"Fawaterk API Error: {e.response.text}")
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            import traceback
+            trace_str = traceback.format_exc()
+            print(f"Checkout Error: {trace_str}")
+            raise HTTPException(status_code=500, detail=repr(e))
 
 @payment_router.post("/verify")
 async def verify_payment(session_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
