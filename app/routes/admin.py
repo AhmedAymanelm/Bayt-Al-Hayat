@@ -709,7 +709,7 @@ async def get_pricing_settings(
 ):
     # Services we currently offer
     services = [
-        "final_report_video"
+        "monthly_subscription"
     ]
     
     # We query both price_* and currency_* keys
