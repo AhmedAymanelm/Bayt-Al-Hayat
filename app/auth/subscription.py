@@ -46,7 +46,7 @@ async def check_subscription_access(
     active_sub = result.scalar_one_or_none()
 
     if active_sub:
-        return True  # ✅ مشترك — اسمح
+        return True  
 
     # ── 2. No active subscription — check free trial ──────────────────────────
     if not current_user.free_trial_used:
@@ -54,7 +54,7 @@ async def check_subscription_access(
         current_user.free_trial_used = True
         db.add(current_user)
         await db.commit()
-        return True  # ✅ تجربة مجانية — اسمح وعلّم
+        return True  
 
     # ── 3. Trial already used and no subscription → block ────────────────────
     raise HTTPException(
