@@ -155,62 +155,43 @@ class ComprehensiveService:
 - **مستوى الحظ:** {astrology_result.get('luck_level', 'N/A')}
 - **اللون المحظوظ:** {astrology_result.get('lucky_color', 'N/A')}
 - **الرقم المحظوظ:** {astrology_result.get('lucky_number', 'N/A')}
-- **التوافق:** {astrology_result.get('compatibility', 'N/A')}
+- **التوافق البرجي:** {astrology_result.get('compatibility', 'N/A')}
 - **النصيحة:** {astrology_result.get('advice', 'N/A')}
 - **التحذير:** {astrology_result.get('warning', 'N/A')}
 
 ---
 
 {'### 📜 نتائج تحليل علم الحروف:' if letter_result else ''}
-{f'''- **الاسم:** {letter_result.get('name', 'N/A')}
-- **العمر:** {letter_result.get('age', 'N/A')}
-- **عدد الحروف:** {letter_result.get('letters_count', 'N/A')}
+{f"""- **الحرف الحاكم:** {letter_result.get('governing_letter', 'N/A')}
 - **المرحلة:** {letter_result.get('stage', 'N/A')}
-- **الحرف الحاكم:** {letter_result.get('governing_letter', 'N/A')}
+- **عدد الحروف:** {letter_result.get('letters_count', 'N/A')}
 - **نوع التوجيه:** {letter_result.get('guidance_type', 'N/A')}
 - **التوجيه:** {letter_result.get('guidance', 'N/A')}
 
 ---
-''' if letter_result else ''}
+""" if letter_result else ''}
 
 ### 📝 المطلوب منك:
 
-اكتب تقريراً شاملاً يتكون من الأقسام التالية:
+اكتب تقريراً شاملاً متدفقاً **بدون أي عناوين أو أرقام أو نقاط أو تقسيمات** — فقرات متصلة فقط تُقرأ كرسالة شخصية حميمة.
 
-1. **مقدمة ترحيبية شخصية** (50-70 كلمة)
-   - استخدم الاسم
-   - أنشئ اتصالاً فورياً
+التقرير يجب أن يغطي هذه المحاور مدمجةً بشكل سلس داخل الفقرات دون الإشارة الصريحة إليها:
 
-2. **التحليل المتكامل: دمج العلوم {'الأربعة' if letter_result else 'الثلاثة'}** (200-300 كلمة)
-   - كيف تتقاطع النتائج النفسية والعصبية والفلكية{' وعلم الحروف' if letter_result else ''}؟
-   - ما هي الأنماط المشتركة؟
-   - ما هي نقاط القوة الظاهرة؟
-   - ما هي التحديات التي تحتاج انتباه؟
-   - استخدم أمثلة محددة وتطبيقات عملية
+- ابدأ بمقدمة ترحيبية دافئة تُشعر الشخص بأنك تعرفه جيداً
+- عرّفه بكل نتائج العلوم {'الأربعة' if letter_result else 'الثلاثة'} بشكل مفهوم وضمن السياق:
+  برجه الشمسي ({astrology_result.get('sun_sign', '')}) وما يعنيه، وطالعه الفلكي ({astrology_result.get('ascendant', '')}) وكيف يُكمل برجه الشمسي، وأنماطه العصبية الأربعة بالترتيب (Fight ثم Flight ثم Freeze ثم Fawn) وما تكشفه عن طريقة استجابته، ومستوى صحته النفسية ودرجته، {'وحرفه الحاكم ومرحلته في علم الحروف وما يدل عليه سلوكياً' if letter_result else ''}
+- اربط التقاطعات بين العلوم في صورة منسجمة واحدة
+- فسّر لماذا يشعر بهذه الطريقة وما الجذور العميقة لأنماطه
+- قدّم توصيات عملية ملموسة تستخدم لونه المحظوظ ({astrology_result.get('lucky_color', '')}) ورقمه المحظوظ ({astrology_result.get('lucky_number', '')}) والتوافق البرجي ({astrology_result.get('compatibility', '')})
+- اختم برسالة تمكينية قوية لا تُنسى
 
-3. **رؤى عميقة وتفسيرات** (150-200 كلمة)
-   - لماذا يشعر الشخص بهذه الطريقة؟
-   - كيف يمكن فهم السلوكيات الحالية؟
-   - ما هي الجذور العميقة للأنماط الملاحظة؟
-
-4. **توصيات عملية قابلة للتطبيق** (150-200 كلمة)
-   - نصائح محددة ومباشرة
-   - استراتيجيات يمكن البدء بها فوراً
-   - استخدام العناصر المحظوظة بفعالية
-   - كيفية التعامل مع التحديات المحددة
-
-5. **رسالة ختامية تمكينية وملهمة** (50-70 كلمة)
-   - تأكيد إيجابي
-   - تشجيع موجه للمستقبل
-   - عبارة ختامية قوية لا تُنسى
-
-### 📐 إرشادات الأسلوب:
-- تحدث كصديق حكيم، ليس كمنجم أو معالج
+### 📐 إرشادات الأسلوب الصارمة:
+- لا عناوين، لا أرقام، لا نقاط، لا نص غامق — فقرات متصلة فقط
+- تحدث كصديق حكيم يعرف الشخص جيداً
+- استخدم الاسم ({name}) عدة مرات بشكل طبيعي
 - استخدم "أنت" لخلق الحميمية
-- وازن بين التحقق والتحدي اللطيف
-- اجعل كل جملة ذات قيمة
-- تدفق محادثة طبيعي
-- تجنب النقاط والقوائم في النص النهائي (اكتب فقرات متصلة)
+- لا تترك أي معلومة من النتائج دون ذكرها وتفسيرها ضمن السياق
+- الطول الإجمالي: 600-800 كلمة
 
 اكتب التقرير الكامل الآن، جاهزاً للقراءة مباشرة.
 """
@@ -235,7 +216,7 @@ class ComprehensiveService:
             
             return {
                 "name": name,
-                "type": "comprehensive_analysis",
+                "type": "تحليل شامل",
                 "report": comprehensive_report,
                 "results_summary": {
                     "psychology": psychology_result,
@@ -250,7 +231,7 @@ class ComprehensiveService:
         except Exception as e:
             return {
                 "name": name,
-                "type": "comprehensive_analysis",
+                "type": "تحليل شامل",
                 "report": cls._get_fallback_report(name, psychology_result, neuroscience_result, astrology_result, letter_result),
                 "results_summary": {
                     "psychology": psychology_result,
