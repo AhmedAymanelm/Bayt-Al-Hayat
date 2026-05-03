@@ -73,14 +73,54 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(tick, 1000);
   }
 
-  // Sidebar toggle
+  // Sidebar toggle — mobile overlay vs desktop collapse
   const toggleBtn = document.getElementById('toggleSidebar');
   const sidebar = document.getElementById('sidebar');
+
+  // Inject backdrop element once
+  let backdrop = document.querySelector('.sidebar-backdrop');
+  if (!backdrop && sidebar) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', closeMobileSidebar);
+  }
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  function closeMobileSidebar() {
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
   if (toggleBtn && sidebar) {
     toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
+      if (isMobile()) {
+        const isOpen = sidebar.classList.toggle('mobile-open');
+        if (backdrop) backdrop.classList.toggle('active', isOpen);
+      } else {
+        sidebar.classList.toggle('collapsed');
+      }
     });
   }
+
+  // Close sidebar on nav link click (mobile)
+  if (sidebar) {
+    sidebar.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', () => {
+        if (isMobile()) closeMobileSidebar();
+      });
+    });
+  }
+
+  // On resize from mobile → desktop, clean up
+  window.addEventListener('resize', () => {
+    if (!isMobile() && sidebar) {
+      sidebar.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
+    }
+  });
+
 
   // Dark mode toggle
   const themeBtn = document.getElementById('toggleTheme');

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Users - بيت الحياة</title>
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=5" />
   <script src="i18n.js?v=3"></script>
   <style>
     .table-card {
@@ -255,6 +255,23 @@
       font-size: 0.8rem;
       color: var(--text-muted);
     }
+
+    @media (max-width: 768px) {
+      .search-box {
+        min-width: 100%;
+      }
+      .table-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .user-detail-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .modal-box {
+        padding: 1.25rem;
+      }
+    }
+
   </style>
 </head>
 
@@ -355,7 +372,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
   <script>
     let allUsers = [];
 

@@ -660,3 +660,303 @@ body.dark-mode .btn-info:hover {
 [dir="rtl"] .chart-container, [dir="rtl"] canvas {
   direction: ltr;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE & TABLET
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Sidebar overlay backdrop ── */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: opacity 0.3s ease;
+}
+.sidebar-backdrop.active {
+  display: block;
+}
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+
+  .dashboard-body {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .welcome-banner {
+    padding: 2rem 1.5rem;
+  }
+
+  .welcome-banner-text h1 {
+    font-size: 1.4rem;
+  }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 260px;
+  }
+
+  /* Sidebar becomes a fixed overlay */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: auto;
+    left: 0;
+    z-index: 100;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  }
+
+  [dir="rtl"] .sidebar {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  [dir="rtl"] .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Collapsed class has no effect on mobile — always full width when open */
+  .sidebar.collapsed {
+    width: var(--sidebar-width) !important;
+  }
+  .sidebar.collapsed .nav-item span,
+  .sidebar.collapsed .nav-divider,
+  .sidebar.collapsed .nav-section-title {
+    display: revert;
+  }
+  .sidebar.collapsed .nav-item {
+    justify-content: flex-start;
+    padding: 0.75rem 1.5rem;
+    gap: 1rem;
+  }
+  .sidebar.collapsed .sidebar-logo {
+    font-size: 1.25rem;
+    padding: 0 1.5rem;
+    justify-content: flex-start;
+  }
+  .sidebar.collapsed .sidebar-logo::after {
+    display: none;
+  }
+
+  /* Main content takes full width */
+  .main-content {
+    width: 100%;
+  }
+
+  /* Header */
+  .top-header {
+    padding: 0 1rem;
+  }
+
+  .header-right {
+    gap: 0.25rem;
+  }
+
+  /* Hide non-essential header buttons on very small screens */
+  #toggleFullscreen {
+    display: none;
+  }
+
+  /* Dashboard body */
+  .dashboard-body {
+    padding: 1rem;
+  }
+
+  /* Dashboard header info: stack on mobile */
+  .dashboard-header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .date-time-display {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  /* Welcome banner: hide the big icon, simplify */
+  .welcome-banner {
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .welcome-banner-text h1 {
+    font-size: 1.2rem;
+  }
+
+  .welcome-banner-text p {
+    font-size: 0.8rem;
+  }
+
+  .banner-icon {
+    display: none;
+  }
+
+  /* KPI grid → 2 columns */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .kpi-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .kpi-icon-wrap {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .kpi-info h3 {
+    font-size: 1.15rem;
+  }
+
+  .kpi-info p {
+    font-size: 0.75rem;
+  }
+
+  /* Charts row → single column */
+  .dashboard-body > div[style*="grid-template-columns: 1.6fr 1fr"],
+  .dashboard-body > div[style*="grid-template-columns: repeat(3"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Quick links → 2 columns */
+  .dashboard-body > div[style*="repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Tables: enable horizontal scroll */
+  table, .table-wrapper {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  /* Filters: wrap */
+  .filters {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  .filters select,
+  .filters input {
+    font-size: 0.8rem;
+  }
+
+  /* Modal: full-width on mobile */
+  .modal-overlay .modal,
+  .modal-overlay > div {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 1rem auto !important;
+    padding: 1.25rem !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Settings page tabs: scrollable */
+  .settings-tabs,
+  [role="tablist"],
+  .tab-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    padding-bottom: 4px;
+  }
+
+  /* Breadcrumb: hide on mobile */
+  .breadcrumb {
+    font-size: 0.78rem;
+  }
+}
+
+/* ── Small Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .kpi-card {
+    padding: 0.85rem 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .kpi-icon-wrap {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+
+  .kpi-info h3 {
+    font-size: 1rem;
+  }
+
+  .kpi-info p {
+    font-size: 0.7rem;
+  }
+
+  .welcome-banner-text h1 {
+    font-size: 1.1rem;
+  }
+
+  .top-header {
+    padding: 0 0.75rem;
+  }
+
+  .dashboard-body {
+    padding: 0.75rem;
+  }
+
+  /* Quick links → 1 column on very small */
+  .dashboard-body > div[style*="repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .btn-sm, .action-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* ── RTL Mobile adjustments ── */
+@media (max-width: 768px) {
+  [dir="rtl"] .nav-item.active {
+    border-right: 3px solid var(--primary-color);
+    border-left: none;
+  }
+}
