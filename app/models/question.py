@@ -9,11 +9,11 @@ class AssessmentQuestion(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     assessment_type = Column(String, nullable=False, index=True)  # "psychology" | "neuroscience"
-    order_index = Column(Integer, nullable=False)                 # ترتيب السؤال
-    text = Column(Text, nullable=False)                           # نص السؤال
-    options = Column(JSON, nullable=False)                        # الاختيارات (list for psychology, list for neuroscience)
-    options_text = Column(JSON, nullable=True)                    # نص الاختيارات (dict for neuroscience: {"A": "...", "B": "..."})
-    is_active = Column(Boolean, default=True)                     # تفعيل/تعطيل السؤال
+    order_index = Column(Integer, nullable=False)
+    text = Column(Text, nullable=False)
+    options = Column(JSON, nullable=False)
+    options_text = Column(JSON, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
